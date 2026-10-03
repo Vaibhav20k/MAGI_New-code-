@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LookbookApproval",
+  "type": "object",
+  "required": [
+    "approval_id",
+    "run_id",
+    "lookbook_id",
+    "lookbook_version",
+    "lookbook_hash",
+    "decision",
+    "decided_by",
+    "decided_at",
+    "status"
+  ],
+  "properties": {
+    "approval_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "lookbook_id": {
+      "type": "string"
+    },
+    "lookbook_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lookbook_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "APPROVE",
+        "REQUEST_CHANGES"
+      ]
+    },
+    "decided_by": {
+      "type": "string"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "feedback_comments": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "LOOKBOOK_APPROVED",
+        "LOOKBOOK_CHANGES_REQUESTED"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

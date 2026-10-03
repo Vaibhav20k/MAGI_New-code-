@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResearchDossier",
+  "type": "object",
+  "required": [
+    "request_id",
+    "topic",
+    "objective",
+    "target_audience",
+    "format",
+    "duration_seconds",
+    "recommended_angle",
+    "core_insight",
+    "historical_evidence",
+    "scientific_evidence",
+    "modern_technology_connection",
+    "magppie_product_relevance",
+    "claim_ledger",
+    "recommended_narrative_points",
+    "potential_hooks",
+    "source_register"
+  ],
+  "properties": {
+    "request_id": { "type": "string" },
+    "topic": { "type": "string" },
+    "objective": { "type": "string" },
+    "target_audience": { "type": "string" },
+    "format": {
+      "type": "string",
+      "enum": ["short-form", "mid-form", "long-form"]
+    },
+    "duration_seconds": { "type": "integer" },
+    "recommended_angle": { "type": "string" },
+    "core_insight": { "type": "string" },
+    "historical_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "claim", "historical_context", "source", "source_tier", "confidence", "verification_status"],
+        "properties": {
+          "claim_id": { "type": "string" },
+          "claim": { "type": "string" },
+          "historical_context": { "type": "string" },
+          "source": { "type": "string" },
+          "source_tier": { "type": "string", "enum": ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"] },
+          "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "verification_status": { "type": "string", "enum": ["VERIFIED", "QUALIFIED", "CONTESTED", "UNVERIFIED", "REJECTED"] }
+        }
+      }
+    },
+    "scientific_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "claim", "mechanism", "source", "source_tier", "confidence", "verification_status"],
+        "properties": {
+          "claim_id": { "type": "string" },
+          "claim": { "type": "string" },
+          "mechanism": { "type": "string" },
+          "source": { "type": "string" },
+          "source_tier": { "type": "string", "enum": ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"] },
+          "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "verification_status": { "type": "string", "enum": ["VERIFIED", "QUALIFIED", "CONTESTED", "UNVERIFIED", "REJECTED"] }
+        }
+      }
+    },
+    "modern_technology_connection": { "type": "string" },
+    "magppie_product_relevance": {
+      "type": "object",
+      "required": ["product_name", "relevant_features", "approved_claim_ids"],
+      "properties": {
+        "product_name": { "type": "string" },
+        "relevant_features": { "type": "array", "items": { "type": "string" } },
+        "approved_claim_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "claim_ledger": {
+      "type": "object",
+      "required": ["approved_claims", "qualified_claims", "rejected_claims"],
+      "properties": {
+        "approved_claims": { "type": "array", "items": { "type": "string" } },
+        "qualified_claims": { "type": "array", "items": { "type": "string" } },
+        "rejected_claims": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "recommended_narrative_points": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "potential_hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["hook_id", "hook_text", "angle_type", "evidence_anchor"],
+        "properties": {
+          "hook_id": { "type": "string" },
+          "hook_text": { "type": "string" },
+          "angle_type": { "type": "string" },
+          "evidence_anchor": { "type": "string" }
+        }
+      }
+    },
+    "source_register": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "citation", "tier"],
+        "properties": {
+          "source_id": { "type": "string" },
+          "citation": { "type": "string" },
+          "tier": { "type": "string", "enum": ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"] }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

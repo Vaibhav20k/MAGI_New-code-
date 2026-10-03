@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MAGI · Log in</title>
+<style>
+:root{--bg:#09090B;--panel:#111114;--line:#27272D;--fg:#F1F2F4;--muted:#8B9099;--cyan:#E09A66;--pink:#E07A6A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+form{width:min(380px,100%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:20px;letter-spacing:.04em}
+p{margin:0;color:var(--muted)}
+label{font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+input{width:100%;margin-top:6px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font:inherit}
+button{height:44px;border-radius:8px;border:1px solid var(--cyan);background:none;color:var(--cyan);font:inherit;letter-spacing:.08em;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#msg{color:var(--pink);min-height:1.5em}
+</style>
+</head>
+<body>
+<form id="f">
+  <img src="/static/logo-white.svg" alt="MAGPPIE" width="132" height="30" style="height:30px;width:auto;align-self:flex-start">
+  <h1>MAGI</h1>
+  <p>Enter the team password to open the dashboard.</p>
+  <label>Password<input type="password" id="p" autocomplete="current-password" required autofocus></label>
+  <button id="b">LOG IN</button>
+  <p id="msg" role="alert"></p>
+</form>
+<script>
+document.getElementById("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = document.getElementById("b"), msg = document.getElementById("msg");
+  b.disabled = true; msg.textContent = "";
+  try {
+    const r = await fetch("/api/login", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({password: document.getElementById("p").value})});
+    if (r.ok) { location.href = "/"; return; }
+    msg.textContent = (await r.json().catch(() => ({}))).detail || "Could not log in.";
+  } catch (_) { msg.textContent = "The server is not reachable."; }
+  b.disabled = false;
+});
+</script>
+</body>
+</html>

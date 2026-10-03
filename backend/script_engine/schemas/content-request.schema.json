@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ContentRequest",
+  "type": "object",
+  "required": [
+    "request_id",
+    "topic",
+    "primary_objective",
+    "format",
+    "target_duration_seconds",
+    "target_audience",
+    "platform"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "pattern": "^REQ-[A-Za-z0-9_-]+$"
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 5
+    },
+    "primary_objective": {
+      "type": "string",
+      "minLength": 5
+    },
+    "format": {
+      "type": "string",
+      "enum": ["short-form", "mid-form", "long-form"]
+    },
+    "target_duration_seconds": {
+      "type": "integer",
+      "minimum": 15,
+      "maximum": 600
+    },
+    "target_audience": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["instagram_reels", "youtube_shorts", "youtube_long", "linkedin", "brand_film", "website"]
+    },
+    "featured_product_category": {
+      "type": "string"
+    },
+    "custom_instructions": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

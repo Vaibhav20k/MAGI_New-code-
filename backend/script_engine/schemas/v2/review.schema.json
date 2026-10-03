@@ -1,0 +1,314 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EditorialReview",
+  "type": "object",
+  "required": [
+    "review_id",
+    "script_id",
+    "request_id",
+    "status",
+    "readiness_for_approval",
+    "issues_detected",
+    "qa_summary",
+    "final_script",
+    "approval_brief"
+  ],
+  "properties": {
+    "review_id": {
+      "type": "string"
+    },
+    "script_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "REVISION_REQUIRED"
+      ]
+    },
+    "readiness_for_approval": {
+      "type": "boolean"
+    },
+    "issues_detected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "issue_id",
+          "severity",
+          "category",
+          "description",
+          "resolution"
+        ],
+        "properties": {
+          "issue_id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "CRITICAL",
+              "IMPORTANT",
+              "MINOR",
+              "PASS"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "qa_summary": {
+      "type": "object",
+      "required": [
+        "historical_qa",
+        "scientific_qa",
+        "product_truth_qa",
+        "brand_voice_qa",
+        "pacing_and_duration_qa"
+      ],
+      "properties": {
+        "historical_qa": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "QUALIFIED",
+            "FAIL"
+          ]
+        },
+        "scientific_qa": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "QUALIFIED",
+            "FAIL"
+          ]
+        },
+        "product_truth_qa": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "QUALIFIED",
+            "FAIL"
+          ]
+        },
+        "brand_voice_qa": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "QUALIFIED",
+            "FAIL"
+          ]
+        },
+        "pacing_and_duration_qa": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "QUALIFIED",
+            "FAIL"
+          ]
+        }
+      }
+    },
+    "final_script": {
+      "type": "object",
+      "required": [
+        "title",
+        "format",
+        "target_duration_seconds",
+        "actual_duration_seconds",
+        "total_word_count",
+        "hook",
+        "scenes",
+        "call_to_action"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "short-form",
+            "mid-form",
+            "long-form"
+          ]
+        },
+        "target_duration_seconds": {
+          "type": "integer"
+        },
+        "actual_duration_seconds": {
+          "type": "integer"
+        },
+        "total_word_count": {
+          "type": "integer"
+        },
+        "hook": {
+          "type": "object",
+          "required": [
+            "hook_text",
+            "duration_seconds",
+            "visual_cue"
+          ],
+          "properties": {
+            "hook_text": {
+              "type": "string"
+            },
+            "duration_seconds": {
+              "type": "integer"
+            },
+            "visual_cue": {
+              "type": "string"
+            },
+            "angle_family": {
+              "$ref": "#/definitions/angle_family"
+            },
+            "opening_form": {
+              "$ref": "#/definitions/opening_form"
+            }
+          },
+          "description": "Carry angle_family and opening_form through from the draft so the hook ledger can record the framing, not just the wording."
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "scene_number",
+              "time_range",
+              "visual_direction",
+              "narration",
+              "on_screen_text",
+              "audio_cues"
+            ],
+            "properties": {
+              "scene_number": {
+                "type": "integer"
+              },
+              "time_range": {
+                "type": "string"
+              },
+              "visual_direction": {
+                "type": "string"
+              },
+              "narration": {
+                "type": "string"
+              },
+              "on_screen_text": {
+                "type": "string"
+              },
+              "audio_cues": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "call_to_action": {
+          "type": "object",
+          "required": [
+            "cta_text",
+            "cta_type"
+          ],
+          "properties": {
+            "cta_text": {
+              "type": "string"
+            },
+            "cta_type": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "approval_brief": {
+      "type": "object",
+      "required": [
+        "title",
+        "format",
+        "duration",
+        "core_idea",
+        "featured_product",
+        "key_claims_verified",
+        "evidence_summary",
+        "product_claim_summary",
+        "risk_flags"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "core_idea": {
+          "type": "string"
+        },
+        "featured_product": {
+          "type": "string"
+        },
+        "key_claims_verified": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_summary": {
+          "type": "string"
+        },
+        "product_claim_summary": {
+          "type": "string"
+        },
+        "risk_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "angle_family": {
+      "type": "string",
+      "enum": [
+        "hygiene-biology",
+        "acoustic-comfort",
+        "thermal-durability",
+        "material-longevity",
+        "air-quality",
+        "ergonomic-flow",
+        "metallurgy-history",
+        "craft-geometry-history",
+        "lifecycle-sustainability"
+      ]
+    },
+    "opening_form": {
+      "type": "string",
+      "enum": [
+        "everyday-friction",
+        "sensory-detail",
+        "material-detail",
+        "verified-stat",
+        "demonstration",
+        "contrast",
+        "direct-statement",
+        "historical-discovery"
+      ]
+    }
+  }
+}

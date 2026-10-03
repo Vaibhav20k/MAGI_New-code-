@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAGI, the second brain of Magppie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap">
+<style>
+/* Home screen: a round stone table (canvas). MAGI's brain floats over the pedestal, the departments stand on
+   the rim, and the table turns to bring the chosen one to the front (A and D, the arrows, or a click).
+   Opening a live department shows how it is built: its jobs, its agents, their tools (svg).
+   Look: MAGPPIE's own identity. Obsidian stone, copper and silver, Lato, one idea, generous space. */
+:root{
+  --bg:#09090B;--panel:rgba(17,17,20,.9);--line:rgba(201,206,214,.13);--fg:#F1F2F4;--muted:#8B9099;
+  --amber:#E09A66;--coral:#C77B4A;--cyan:#C9CED6;--mint:#9CC5A1;--pink:#E07A6A;--lilac:#C9CED6;--gold:#E09A66;--ice:#6FD8FF;--sun:#FFC480;
+  --display:"Lato","Helvetica Neue",system-ui,sans-serif;--mono:"Lato","Helvetica Neue",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--fg);font:13px/1.5 var(--mono)}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+header{position:fixed;inset:0 0 auto 0;z-index:6;display:flex;gap:14px;align-items:stretch;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(9,9,11,.84);backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:14px;padding-right:6px}
+.brand img{display:block;height:22px;width:auto}
+.brand div{display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--line);padding-left:14px}
+.brand b{font:900 24px/1 var(--display);letter-spacing:.24em}
+.brand span{font-size:9.5px;letter-spacing:.18em;color:var(--muted);margin-top:5px;white-space:nowrap}
+.dump{flex:1;min-width:0;border:1px solid var(--line);border-radius:4px;display:flex;flex-direction:column;background:rgba(255,255,255,.015)}
+.dump form{display:flex;border-bottom:1px solid var(--line)}
+.dump input{flex:1;min-width:0;background:none;border:0;color:var(--fg);font:inherit;padding:9px 12px}
+.dump input::placeholder{color:var(--muted)}
+.dump button{background:none;border:0;border-left:1px solid var(--line);padding:0 14px;letter-spacing:.12em;color:var(--amber)}
+.dump small{padding:5px 12px;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.hbtn{display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:4px;color:var(--amber);background:none;letter-spacing:.1em;white-space:nowrap;font-size:11px}
+#stage{position:fixed;inset:0}
+#stage.over::after{content:"DROP TO ADD TO MAGI";position:absolute;inset:78px 14px 14px;border:1.5px dashed var(--amber);border-radius:8px;display:grid;place-items:center;font:600 20px var(--display);letter-spacing:.2em;color:var(--amber);background:rgba(255,180,77,.05);pointer-events:none;z-index:4}
+canvas,svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+svg text{font-family:var(--mono);user-select:none;font-weight:700}
+.node{cursor:pointer;outline:none}
+.node:focus-visible circle.ring,.node:hover circle.ring{stroke-width:3}
+.locked{opacity:.5}
+.flow{animation:flow 1.1s linear infinite}
+.pulse{animation:pulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.in{opacity:0;animation:appear .5s ease forwards}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .55s ease forwards}
+.dim{opacity:.16;transition:opacity .2s}
+.lit{transition:opacity .2s}
+@keyframes flow{to{stroke-dashoffset:-16}}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:0;transform:scale(1.55)}}
+@keyframes appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+.panel{position:fixed;left:16px;bottom:16px;z-index:5;width:268px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;transform-origin:50% 50%;will-change:transform}
+body.table .panel{background:rgba(10,14,28,.78);border-color:rgba(111,216,255,.22);box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 26px rgba(60,150,255,.10);backdrop-filter:blur(8px)}
+.panel h2{margin:0;font:600 13px var(--display);letter-spacing:.16em}
+.panel p{margin:0;color:var(--muted)}
+.panel b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.big{font:600 26px/1 var(--display);color:var(--fg);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:11px;color:var(--muted)}
+.bar i{grid-column:1/3;height:4px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar i::after{content:"";display:block;height:100%;width:var(--w);background:var(--c);border-radius:2px;transition:width .8s ease}
+#card{width:300px}
+#card .tool{color:var(--fg)}
+#talk{left:auto;right:16px;width:320px;z-index:7}
+#talk.mini #log,#talk.mini #askf,#talk.mini .row,#talk.mini #michint{display:none}
+.thead{display:flex;align-items:center;gap:8px}
+.thead span{margin-left:auto;font-size:10px;letter-spacing:.12em;color:var(--amber);text-align:right}
+.thead button{background:none;border:1px solid var(--line);border-radius:4px;width:26px;height:24px;line-height:1;flex:none}
+#log{display:flex;flex-direction:column;gap:8px;overflow:auto;max-height:36vh;min-height:40px}
+.m{font-size:12px;overflow-wrap:anywhere}
+.m b{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--muted);font-weight:500}
+.m.magi b{color:var(--amber)}
+.m.err{color:var(--pink)}
+#heard,#michint{color:var(--muted);margin:0}
+#heard:empty,#michint:empty{display:none}
+#askf{display:flex;border:1px solid var(--line);border-radius:4px}
+#askf input{flex:1;min-width:0;background:none;border:0;color:var(--fg);font:inherit;padding:8px 10px}
+#askf button{background:none;border:0;border-left:1px solid var(--line);padding:0 12px;color:var(--cyan);letter-spacing:.1em}
+.row{display:flex;gap:8px}
+.row button{flex:1;background:none;border:1px solid var(--line);border-radius:4px;padding:6px;font-size:10.5px;letter-spacing:.1em}
+.row button.on{border-color:var(--mint);color:var(--mint)}
+#shell{position:fixed;inset:78px 0 0 0;width:100%;height:calc(100% - 78px);border:0;z-index:5;background:var(--bg);animation:rise .45s ease}
+body.shell #stats,body.shell #card,body.shell #pill,body.shell #keys,body.shell #realm,body.shell #stations{display:none!important}
+@keyframes rise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.pill{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:var(--panel);overflow:hidden}
+.pill button{background:none;border:0;padding:10px 18px;letter-spacing:.12em;font-size:11px;white-space:nowrap}
+.pill .go{color:#09090B;background:var(--gold);font-weight:700}
+.pill span{padding:0 16px;letter-spacing:.2em;color:var(--gold);border-inline:1px solid var(--line)}
+#stations{position:fixed;inset:0;z-index:3;pointer-events:none}
+.st{position:absolute;left:0;top:0;width:78px;height:78px;margin:-60px 0 0 -39px;background:none;border:0;border-radius:8px;pointer-events:auto;padding:0;transform-origin:50% 77%}
+.st span{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:8px;white-space:nowrap;font-size:11.5px;font-weight:700;letter-spacing:.2em;color:#B8C6DA;text-shadow:0 1px 8px #000,0 0 2px #000;transition:color .3s,text-shadow .3s,letter-spacing .3s}
+.st:hover span,.st:focus-visible span{color:#fff;text-shadow:0 0 14px rgba(111,216,255,.9),0 1px 8px #000}
+.st.live span{color:var(--sun);text-shadow:0 0 14px rgba(255,170,100,.75),0 1px 8px #000}
+.st.on span{color:#fff;letter-spacing:.3em;text-shadow:0 0 16px rgba(111,216,255,.95),0 1px 8px #000}
+.st.live.on span{color:#FFE0C2;text-shadow:0 0 18px rgba(255,170,100,.95),0 1px 8px #000}
+#brainbtn{position:absolute;border-radius:50%;background:none;border:0;pointer-events:auto;transform:translate(-50%,-50%);z-index:160}
+#realm{position:fixed;left:50%;top:98px;transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;width:min(640px,calc(100vw - 700px));min-width:300px}
+#realm h1{margin:0;font:300 34px/1.1 var(--display);letter-spacing:.42em;text-indent:.42em;text-transform:uppercase;text-shadow:0 0 22px rgba(111,216,255,.55)}
+#realm.open h1{text-shadow:0 0 24px rgba(255,170,100,.6)}
+#realm .rule{height:1px;margin:12px auto;background:linear-gradient(90deg,transparent,rgba(111,216,255,.9),transparent);position:relative;box-shadow:0 0 12px rgba(111,216,255,.5)}
+#realm.open .rule{background:linear-gradient(90deg,transparent,rgba(255,196,128,.95),transparent);box-shadow:0 0 12px rgba(255,170,100,.5)}
+#realm .rule::after{content:"";position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;transform:rotate(45deg);background:var(--bg);border:1px solid var(--ice);box-shadow:0 0 10px var(--ice)}
+#realm.open .rule::after{border-color:var(--sun);box-shadow:0 0 10px var(--sun)}
+#realm b{display:block;font-size:11.5px;letter-spacing:.3em;font-weight:700;color:var(--ice)}
+#realm.open b{color:var(--sun)}
+#realm.swap h1{animation:name-in .7s cubic-bezier(.2,.7,.2,1)}
+#realm.swap .rule{animation:rule-in .7s ease}
+#realm.swap b,#realm.swap p{animation:appear .6s ease .12s both}
+@keyframes name-in{from{opacity:0;letter-spacing:.8em;text-indent:.8em}to{opacity:1}}
+@keyframes rule-in{from{transform:scaleX(0);opacity:0}to{transform:none;opacity:1}}
+#realm p{margin:6px 0 0;color:#C9CED6;font-size:13.5px;text-wrap:balance}
+#realm p+p{color:var(--muted);font-size:12.5px}
+#keys{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:11px;letter-spacing:.16em;white-space:nowrap}
+#keys button{background:rgba(17,17,20,.7);border:1px solid rgba(201,206,214,.5);border-radius:3px;min-width:27px;height:25px;padding:0 8px;font-weight:700;color:var(--fg);letter-spacing:.06em}
+#keys button:hover{border-color:var(--ice);color:var(--ice);box-shadow:0 0 12px rgba(111,216,255,.5)}
+#keys button:active{transform:translateY(1px)}
+#keys i{width:1px;height:14px;background:var(--line);margin:0 6px}
+body.table #stats,body.table #talk{bottom:auto;top:94px}
+body.table #log{max-height:20vh}
+#tip{position:fixed;z-index:8;max-width:320px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;pointer-events:none;font-size:11.5px}
+#tip b{display:block;font-weight:700;letter-spacing:.1em;font-size:10px;margin-bottom:3px}
+#tip p{margin:6px 0 0}
+#tip ul{margin:4px 0 0;padding-left:16px;color:var(--muted)}
+#tip small{display:block;margin-top:8px;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+#toast{position:fixed;left:50%;top:92px;transform:translateX(-50%);z-index:8;background:var(--panel);border:1px solid var(--amber);border-radius:4px;padding:9px 14px;max-width:min(520px,92vw)}
+#boot{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:var(--bg);font:600 22px var(--display);letter-spacing:.4em;color:var(--amber);transition:opacity .7s ease;pointer-events:none}
+#boot.off{opacity:0}
+[hidden]{display:none!important}
+@media (max-width:1000px){#realm{width:calc(100vw - 40px);top:96px}#realm h1{font-size:24px}body.table #stats{display:none}body.table #talk{top:auto;bottom:56px}}
+@media (max-width:820px){.brand span,.brand img,#card,#stats{display:none}.brand div{border:0;padding:0}#talk{width:min(320px,calc(100vw - 32px))}}
+@media (prefers-reduced-motion:reduce){.flow,.pulse,#shell,#realm.swap h1,#realm.swap .rule,#realm.swap b,#realm.swap p{animation:none}.in{animation:none;opacity:1}.draw{animation:none;stroke-dashoffset:0}}
+#keybox{position:fixed;right:16px;top:74px;z-index:9;width:min(380px,92vw);background:var(--panel);border:1px solid var(--amber);border-radius:6px;padding:16px}
+#keybox h2{font-size:12px;letter-spacing:.16em;margin:0 0 8px}#keybox p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+#keybox input{width:100%;margin-bottom:10px}#keybox .row{display:flex;gap:8px}
+.hbtn.warn{background:var(--amber);color:#0b0b0d}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="/static/logo-white.svg" alt="MAGPPIE" width="97" height="22"><div><b>MAGI</b><span>THE SECOND BRAIN</span></div></div>
+  <div class="dump">
+    <form id="dump"><input id="fact" type="text" autocomplete="off" placeholder="dump into the brain… or drop documents" aria-label="Add a fact to MAGI"><button>ADD</button></form>
+    <small>adds a fact to MAGI's knowledge · or drop a .md or .txt file anywhere</small>
+  </div>
+  <button class="hbtn" id="keybtn" type="button" aria-haspopup="dialog">AI KEY</button>
+  <button class="hbtn" id="close" hidden>← BACK TO MAGI</button>
+</header>
+<form id="keybox" hidden aria-label="Add a new Gemini key">
+  <h2>NEW GEMINI KEY</h2>
+  <p id="keynote">When Gemini's free requests run out, paste a new key here. It is checked, saved on your server and never shown again.</p>
+  <input id="keyval" type="password" autocomplete="off" placeholder="Paste the key from aistudio.google.com/apikey" aria-label="Gemini key">
+  <div class="row"><button class="hbtn" style="padding:8px 14px">SAVE KEY</button><button class="hbtn" type="button" id="keyclose" style="padding:8px 14px;border-color:var(--line);color:var(--muted)">CLOSE</button></div>
+</form>
+
+<div id="stage">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <svg id="net" role="group" aria-label="MAGI and its departments"></svg>
+</div>
+
+<aside class="panel" id="stats" aria-live="polite"></aside>
+<aside class="panel" id="card" hidden></aside>
+<aside class="panel" id="talk">
+  <div class="thead"><h2>TALK TO MAGI</h2><span id="mood" role="status">MIC OFF</span><button id="mini" aria-label="Shrink or expand the conversation">–</button></div>
+  <div id="log" aria-live="polite"></div>
+  <p id="heard" aria-live="polite"></p>
+  <form id="askf"><input id="say" autocomplete="off" placeholder="Ask MAGI, or tell it what to open" aria-label="Message to MAGI"><button>SEND</button></form>
+  <div class="row"><button id="mic" type="button" title="Or press the space bar">MIC ON</button><button id="voice" type="button" class="on" aria-pressed="true">VOICE ON</button></div>
+  <p id="michint"></p>
+</aside>
+<iframe id="shell" title="Department dashboard" hidden></iframe>
+<div class="pill" id="pill" hidden>
+  <button id="back">← MAGI</button><span id="pill-name"></span><button class="go" id="open">OPEN DASHBOARD →</button>
+</div>
+<div id="stations" hidden></div>
+<div id="realm" hidden><h1 id="realm-name"></h1><div class="rule"></div><b id="realm-state"></b><p id="realm-about"></p><p id="realm-next"></p></div>
+<div id="keys" hidden>
+  <button type="button" data-turn="-1" aria-label="Previous department">A</button><button type="button" data-turn="1" aria-label="Next department">D</button><span>CHANGE DEPARTMENT</span>
+  <i></i><button type="button" id="enter">ENTER</button><span id="enter-label">STEP INSIDE</span>
+  <i></i><span>CLICK THE BRAIN TO TALK</span>
+</div>
+<div id="tip" hidden></div>
+<div id="toast" role="status" hidden></div>
+<div id="boot">MAGI ONLINE</div>
+
+<script>
+const _fetch = window.fetch;            // on the web address, an ended session sends you to the login
+window.fetch = async (...a) => { const r = await _fetch(...a); if (r.status === 401 && r.headers.get("X-MAI-Login")) location.href = "/login"; return r; };
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TOP = 78;                                        // height of the top bar
+const KIND = {core: ["Company knowledge", "#D98A55"], brand: ["Brand identity", "#F0C9A8"], internal: ["Team only", "#8E96A3"],
+              learned: ["Learned from the web", "#C9CED6"], manager: ["Added by the team", "#FFFFFF"], script_bank: ["Scripts and prompts", "#A8794F"]};
+const DEPT_COLOURS = Array(6).fill("#E09A66");          // a connected department glows copper; the others wait in silver
+const fmt = n => Number(n || 0).toLocaleString("en-IN");
+
+const cv = $("cv"), ctx = cv.getContext("2d"), svg = $("net");
+let W = 0, H = 0, map = null, dots = [], byId = {}, hubs = [], view = "home", dept = null, shown = 0, rot = 0, hover = null, beat = 0;
+let mood = "off", lvl = 1;                             // how MAGI is listening or talking; the brain shows it
+const ripples = [];
+const orb = {x: 0, y: 0, r: 0, tx: 0, ty: 0, tr: 0};
+
+// ---------- small helpers ----------
+function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function hash(str) { let h = 2166136261; for (const c of String(str)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
+function el(name, attrs, parent, text) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  (parent || svg).appendChild(e);
+  return e;
+}
+let toastTimer;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 5000); }
+const cut = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+
+// ---------- the brain: every dot is one piece of knowledge ----------
+function placeDots() {
+  const before = dots.length;
+  byId = {};
+  const sizes = {};
+  map.dots.forEach(d => { const k = d.doc + "|" + d.section; sizes[k] = (sizes[k] || 0) + 1; });
+  dots = map.dots.map(d => {
+    const key = d.doc + "|" + d.section, parts = Math.ceil(sizes[key] / 14);          // a big topic spreads over several clusters
+    const group = rng(hash(key + "|" + d.id % parts)), own = rng(d.id * 7919 + 13);
+    const unit = r => { const u = r() * 2 - 1, a = r() * Math.PI * 2, s = Math.sqrt(1 - u * u); return [s * Math.cos(a), u, s * Math.sin(a)]; };
+    const c = unit(group), o = unit(own), spread = .16 + own() * .3, far = .35 + group() * .42;
+    let p = [c[0] * far + o[0] * spread, c[1] * far + o[1] * spread, c[2] * far + o[2] * spread];
+    const len = Math.hypot(...p); if (len > .97) p = p.map(v => v / len * .97);
+    return byId[d.id] = {...d, p, colour: (KIND[d.doc] || KIND.core)[1], sx: 0, sy: 0, k: 0};
+  });
+  const count = {};
+  dots.forEach(d => (d.links || []).forEach(id => count[id] = (count[id] || 0) + 1));
+  hubs = Object.entries(count).sort((a, b) => b[1] - a[1]).slice(0, 9).map(([id]) => byId[id]).filter(Boolean);
+  if (before && dots.length > before) ripples.push(1);
+  shown = Math.min(shown, dots.length);                  // knowledge can also shrink (a rebuild): never draw past the end
+}
+function layout() {
+  const stageH = H - TOP;
+  if (view === "home") {
+    B.cx = W / 2; B.cy = TOP + stageH * .61; B.rx = Math.max(170, Math.min(W * .32, stageH * .6));
+    camera(1, 0);
+  }
+  else { orb.tx = W / 2; orb.ty = H - 118; orb.tr = 38; }
+  if (!orb.r) Object.assign(orb, {x: orb.tx, y: orb.ty, r: orb.tr});
+}
+function drawGrid() {
+  ctx.lineWidth = 1;
+  for (let x = (W / 2) % 44; x < W; x += 44) { ctx.strokeStyle = "rgba(255,255,255,.035)"; ctx.beginPath(); ctx.moveTo(x + .5, TOP); ctx.lineTo(x + .5, H); ctx.stroke(); }
+  for (let y = TOP; y < H; y += 44) { ctx.strokeStyle = "rgba(255,255,255,.035)"; ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke(); }
+}
+let sharp = 2, lastFrame = 0, slowFrames = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (lastFrame && view === "home" && sharp > 1 && document.visibilityState === "visible") {          // a slower machine gets a lighter picture
+    slowFrames = now - lastFrame > 30 ? slowFrames + 1 : Math.max(0, slowFrames - 2);
+    if (slowFrames > 90) { sharp = 1; slowFrames = 0; resize(); }
+  }
+  lastFrame = now;
+  if (W < 50 || H < 150 || orb.r <= 0) return;           // the window is hidden or not laid out yet
+  orb.x += (orb.tx - orb.x) * .1; orb.y += (orb.ty - orb.y) * .1; orb.r += (orb.tr - orb.r) * .1;
+  if (!still) rot += mood === "thinking" ? .014 : .0022;
+  beat++;
+  ctx.clearRect(0, 0, W, H);
+  const table = view === "home" && !!map;
+  let P = [], life = 1;
+  if (table) {
+    const n = map.departments.length; let gap = ((pick - spin) % n + n) % n; if (gap > n / 2) gap -= n;       // turn the short way round
+    spin += Math.abs(gap) < .002 ? gap : gap * (still ? 1 : .11);
+    spin = ((spin % n) + n) % n;
+    if (!born) born = performance.now();
+    const age = Math.min(1, (performance.now() - born) / 2200); life = still ? 1 : 1 - (1 - age) ** 3;     // the camera flies in as the table wakes
+    let dive = diving ? Math.min(1, (performance.now() - diving) / 620) : 0;                              // and dives into a department you enter
+    camera(life, dive);
+    if (dive >= 1) { diving = 0; const d = map.departments[pick]; requestAnimationFrame(() => enter(d, DEPT_COLOURS[pick % 6])); }
+    life *= 1 - dive * dive;
+    $("stations").style.opacity = $("realm").style.opacity = $("keys").style.opacity = dive ? (1 - dive).toFixed(2) : Math.min(1, life * 1.4).toFixed(2);
+    if (flash > 0) flash = Math.max(0, flash - (still ? 1 : .028));
+    P = map.departments.map((_, i) => place(i));
+    drawTable(P, life);
+    P.forEach((p, i) => { if (p.s < 0) drawStation(i, p, life); });
+    drawPedestal(life);
+  } else drawGrid();
+  const {x, y, r} = orb, big = r > 90, cos = Math.cos(rot), sin = Math.sin(rot), tilt = .32;
+  const breathe = table ? 1 + .06 * Math.sin(beat / 38) : 1;                                           // the brain glows and breathes
+  if (table) ctx.globalCompositeOperation = "lighter";
+  const glow = ctx.createRadialGradient(x, y, r * .1, x, y, r * 1.9 * breathe);
+  glow.addColorStop(0, table ? "rgba(255,196,128,.3)" : "rgba(199,123,74,.24)"); glow.addColorStop(.5, table ? "rgba(255,150,90,.12)" : "rgba(199,123,74,.08)"); glow.addColorStop(1, "rgba(199,123,74,0)");
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, r * 1.9 * breathe, 0, 7); ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+  if (table) {                                            // a sphere of dark glass holds the knowledge
+    const glass = ctx.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r * 1.13);
+    glass.addColorStop(0, "rgba(40,34,44,.78)"); glass.addColorStop(.7, "rgba(10,10,22,.86)"); glass.addColorStop(1, "rgba(4,6,16,.9)");
+    ctx.fillStyle = glass; ctx.beginPath(); ctx.arc(x, y, r * 1.13, 0, 7); ctx.fill();
+  }
+  if (shown < dots.length) shown = Math.min(dots.length, shown + (still ? dots.length : 5));
+  for (let i = 0; i < shown; i++) {                       // turn the brain and place each dot on screen
+    const d = dots[i], [px, py, pz] = d.p;
+    const rx = px * cos + pz * sin, rz = -px * sin + pz * cos;
+    const ry = py * Math.cos(tilt) - rz * Math.sin(tilt), rz2 = py * Math.sin(tilt) + rz * Math.cos(tilt);
+    d.k = 1 / (1 + rz2 * .3); d.sx = x + rx * r * d.k; d.sy = y + ry * r * d.k; d.z = rz2;
+  }
+  ctx.lineWidth = big ? .7 : .4;
+  for (let i = 0; i < shown; i++) {                       // lines join pieces that are close in meaning
+    const d = dots[i];
+    for (const id of d.links || []) {
+      const o = byId[id]; if (!o || !o.k) continue;
+      ctx.strokeStyle = `rgba(214,140,92,${.12 + .14 * (1 - (d.z + o.z) / 2) / 2})`;        // the copper vein
+      ctx.beginPath(); ctx.moveTo(d.sx, d.sy); ctx.lineTo(o.sx, o.sy); ctx.stroke();
+    }
+  }
+  if (hubs.length && shown === dots.length) {             // the most connected pieces, wired to the core
+    const core = hubs[0];
+    ctx.strokeStyle = "rgba(201,206,214,.8)"; ctx.lineWidth = big ? 1.1 : .6;                // the silver vein
+    for (const h of hubs.slice(1)) { ctx.beginPath(); ctx.moveTo(core.sx, core.sy); ctx.lineTo(h.sx, h.sy); ctx.stroke(); }
+  }
+  const size = Math.max(.55, r / 190);
+  for (let i = 0; i < shown; i++) {
+    const d = dots[i];
+    ctx.globalAlpha = .45 + .55 * (1 - (d.z + 1) / 2);
+    ctx.fillStyle = d.colour; ctx.beginPath(); ctx.arc(d.sx, d.sy, (1.3 + 1.5 * d.k) * size, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if (shown === dots.length) for (const h of hubs) {
+    ctx.strokeStyle = "#E4E7EB"; ctx.lineWidth = big ? 1.6 : 1; ctx.fillStyle = "#09090B";
+    ctx.beginPath(); ctx.arc(h.sx, h.sy, 4.2 * size, 0, 7); ctx.fill(); ctx.stroke();
+  }
+  const live = mood !== "off" && mood !== "asleep";      // the ring shows whether MAGI is listening, thinking or speaking
+  const ringR = r * 1.13 * (mood === "hearing" || mood === "listening" ? lvl : 1);
+  if (table) {                                            // a halo around the brain
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(255,196,128,${live ? .3 : .14})`; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(x, y, ringR, 0, 7); ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  ctx.strokeStyle = live ? `rgba(255,196,128,${mood === "thinking" ? .55 + .4 * Math.sin(beat / 7) : .98})` : table ? "rgba(255,226,196,.75)" : "rgba(201,206,214,.55)";
+  ctx.lineWidth = live ? 2.2 : 1.2;
+  ctx.beginPath(); ctx.arc(x, y, ringR, 0, 7); ctx.stroke();
+  if (table) {                                            // light on the glass
+    const shine = ctx.createRadialGradient(x - r * .45, y - r * .55, 0, x - r * .45, y - r * .55, r * .9);
+    shine.addColorStop(0, "rgba(255,240,220,.16)"); shine.addColorStop(1, "rgba(255,240,220,0)");
+    ctx.fillStyle = shine; ctx.beginPath(); ctx.arc(x, y, r * 1.12, 0, 7); ctx.fill();
+  }
+  if (mood === "speaking" && beat % 26 === 0 && !still) ripples.push(.8);
+  for (let i = ripples.length - 1; i >= 0; i--) {         // waves: something new was learned, or MAGI is speaking
+    ctx.strokeStyle = `rgba(224,154,102,${ripples[i]})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r * (1.13 + (1 - ripples[i]) * .5), 0, 7); ctx.stroke();
+    if ((ripples[i] -= .014) <= 0) ripples.splice(i, 1);
+  }
+  if (table) {
+    const n = Math.min(110, map.waiting || 0);            // doubts wait outside the brain until the manager approves them
+    ctx.fillStyle = "rgba(201,206,214,.3)";
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996 + rot * .35 * (i % 2 ? 1 : -1), rr = r * (1.2 + (i % 7) * .017);
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr, 1.2, 0, 7); ctx.fill();
+    }
+    if (!dots.length) { ctx.fillStyle = "#8B9099"; ctx.font = "13px Lato, sans-serif"; ctx.textAlign = "center"; ctx.fillText("MAGI is empty. Drop the knowledge base to begin.", x, y); }
+    if (hover && hover.k) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hover.sx, hover.sy, 7, 0, 7); ctx.stroke(); }
+    P.map((p, i) => [p, i]).filter(q => q[0].s >= 0).sort((a, b) => a[0].s - b[0].s).forEach(q => drawStation(q[1], q[0], life));
+    drawAir(life);
+    seatLabels(P);
+    depth();
+  }
+}
+
+// ---------- the round table: MAGI's brain on the pedestal, the departments standing on the rim ----------
+// A stone table seen from in front and above. Its pool is full of slow, living light (cool blue against
+// the warm gold of the brain); the light spills onto the rim, the plinth and the stations. A path of
+// light runs from the brain to every connected department, and the table turns to bring the chosen
+// department to the front.
+const T = {cx: 0, cy: 0, rx: 0, ry: 0, wall: 0};
+const B = {cx: 0, cy: 0, rx: 0};                       // where the table rests; the camera moves it from there
+const cam = {x: 0, y: 0, tx: 0, ty: 0};                 // the viewer: follows the mouse a little, so the scene has depth
+let pick = 0, spin = 0, flash = 0, born = 0, diving = 0;
+const stars = Array.from({length: 90}, (_, i) => { const r = rng(i * 29 + 7); return {x: r(), y: r(), z: .3 + r() * .7, ph: r() * 6.283}; });
+addEventListener("mousemove", e => { cam.tx = (e.clientX / Math.max(1, W) - .5) * 2; cam.ty = (e.clientY / Math.max(1, H) - .5) * 2; });
+addEventListener("mouseleave", () => { cam.tx = cam.ty = 0; });
+function camera(fly, dive) {                            // place the table for this frame
+  if (!still) { cam.x += (cam.tx - cam.x) * .05; cam.y += (cam.ty - cam.y) * .05; }
+  const zoom = (.7 + .3 * fly) * (1 + 1.7 * dive * dive), tilt = Math.max(.18, .22 + .18 * fly + cam.y * .055);
+  const front = B.cy + B.rx * .4 * 1.02;                // while diving, the chosen station stays where it is
+  T.rx = B.rx * zoom; T.ry = T.rx * tilt; T.wall = Math.max(12, T.rx * .05);
+  T.cx = B.cx - cam.x * 30; T.cy = dive ? front - T.ry * 1.02 : B.cy - cam.y * 10 + (1 - fly) * 46;
+  orb.tr = Math.max(36, T.rx * .185); orb.tx = T.cx + cam.x * 9; orb.ty = T.cy + T.wall * .3 - T.rx * .095 - orb.tr * 1.32;
+  if (dive || fly < 1) { orb.x = orb.tx; orb.y = orb.ty; orb.r = orb.tr; }
+}
+function depth() {                                      // the panels and the banner lean with the viewer
+  const calm = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+  $("realm").style.transform = `translateX(-50%) translate(${(-cam.x * 12).toFixed(1)}px,${(-cam.y * 6).toFixed(1)}px)`;
+  for (const [id, side] of [["stats", 1], ["talk", -1]]) {
+    $(id).style.transform = document.body.classList.contains("table") && !calm
+      ? `perspective(900px) rotateY(${(side * 5 + cam.x * 3).toFixed(2)}deg) rotateX(${(-cam.y * 2.5).toFixed(2)}deg) translate(${(cam.x * 8).toFixed(1)}px,${(cam.y * 5).toFixed(1)}px)` : "";
+  }
+}
+const ICE = "111,216,255", GOLD = "255,196,128", ROSE = "255,150,110";
+const poolCv = document.createElement("canvas"), pc = poolCv.getContext("2d");
+const blobs = Array.from({length: 14}, (_, i) => { const r = rng(i * 71 + 3); return {a: r() * 6.283, d: .08 + r() * .78, s: (.15 + r() * .55) * (r() > .5 ? 1 : -1), size: .3 + r() * .36, hue: r()}; });
+const veins = Array.from({length: 11}, (_, i) => { const r = rng(i * 131 + 9); return {a: r() * 6.283, len: 1.4 + r() * 2.8, r0: .08 + r() * .22, grow: .18 + r() * .22, wob: .02 + r() * .05, ph: r() * 6.283, dir: r() > .5 ? 1 : -1, warm: i % 4 === 0}; });
+const sparks = Array.from({length: 100}, (_, i) => { const r = rng(i * 97 + 5); return {a: r() * 6.283, d: .06 + r() * .9, s: (.2 + r() * .8) * (r() > .5 ? 1 : -1), ph: r() * 6.283, big: r() > .88}; });
+const motes = Array.from({length: 64}, (_, i) => { const r = rng(i * 53 + 3); return {x: r() * 2 - 1, y: r(), v: .2 + r() * .7, ph: r() * 6.283, warm: r() > .72, size: .8 + r() * 1.1}; });
+function ell(x, y, rx, ry, a0 = 0, a1 = 6.2832, back = false) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, a0, a1, back); }
+function place(i) {                                    // where a department stands on the rim right now
+  const n = map.departments.length, a = Math.PI / 2 - (i - spin) * 2 * Math.PI / n, s = Math.sin(a);
+  return {x: T.cx + Math.cos(a) * T.rx * 1.02, y: T.cy + s * T.ry * 1.02, s, k: .7 + .42 * (s + 1) / 2, a};
+}
+function drawPool(t, life) {                           // the light inside the table, painted small and stretched, so it is soft
+  const w = 560, h = Math.max(40, Math.round(560 * T.ry / T.rx));
+  if (poolCv.width !== w || poolCv.height !== h) { poolCv.width = w; poolCv.height = h; }
+  pc.globalCompositeOperation = "source-over"; pc.globalAlpha = 1;
+  const base = pc.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+  base.addColorStop(0, "#123A8C"); base.addColorStop(.55, "#07205A"); base.addColorStop(1, "#020A22");
+  pc.fillStyle = base; pc.fillRect(0, 0, w, h);
+  pc.globalCompositeOperation = "lighter";
+  const k = h / w;
+  for (const b of blobs) {                              // drifting clouds of light
+    const ang = b.a + (still ? 0 : t * .0017 * b.s), x = w / 2 + Math.cos(ang) * b.d * w / 2, y = h / 2 + Math.sin(ang) * b.d * h / 2, r = b.size * w / 2;
+    const c = b.hue < .5 ? "40,130,255" : b.hue < .86 ? "70,215,255" : "150,120,255";
+    pc.save(); pc.translate(x, y); pc.scale(1, k);
+    const g = pc.createRadialGradient(0, 0, 0, 0, 0, r); g.addColorStop(0, `rgba(${c},${.36 * life})`); g.addColorStop(1, `rgba(${c},0)`);
+    pc.fillStyle = g; pc.beginPath(); pc.arc(0, 0, r, 0, 7); pc.fill(); pc.restore();
+  }
+  for (const v of veins) {                              // streams of light, slowly turning
+    pc.beginPath();
+    for (let j = 0; j <= 44; j++) {
+      const f = j / 44, ang = v.a + v.dir * (still ? 0 : t * .0011) + f * v.len, rad = v.r0 + f * v.grow * 3.2 + Math.sin(f * 9 + v.ph + t * .006) * v.wob;
+      if (rad > 1) break;
+      const x = w / 2 + Math.cos(ang) * rad * w / 2, y = h / 2 + Math.sin(ang) * rad * h / 2;
+      j ? pc.lineTo(x, y) : pc.moveTo(x, y);
+    }
+    const c = v.warm ? GOLD : "150,228,255";
+    pc.strokeStyle = `rgba(${c},${.07 * life})`; pc.lineWidth = 9; pc.stroke();
+    pc.strokeStyle = `rgba(${c},${.2 * life})`; pc.lineWidth = 3; pc.stroke();
+    pc.strokeStyle = `rgba(235,250,255,${.55 * life})`; pc.lineWidth = .9; pc.stroke();
+  }
+  for (let j = 0; j < 3; j++) {                           // waves leaving the plinth
+    const f = ((still ? .3 : t * .0035) + j / 3) % 1;
+    pc.strokeStyle = `rgba(190,240,255,${.5 * (1 - f) * life})`; pc.lineWidth = 2.2 * (1 - f) + .4;
+    pc.beginPath(); pc.ellipse(w / 2, h / 2, f * w / 2, f * h / 2, 0, 0, 7); pc.stroke();
+  }
+  for (const m of sparks) {                              // points of light caught in it
+    const ang = m.a + (still ? 0 : t * .0013 * m.s), x = w / 2 + Math.cos(ang) * m.d * w / 2, y = h / 2 + Math.sin(ang) * m.d * h / 2;
+    const a = (.15 + .85 * Math.sin(t * .03 + m.ph) ** 2) * life;
+    pc.fillStyle = `rgba(225,247,255,${a.toFixed(2)})`; const z = m.big ? 2.6 : 1.5; pc.fillRect(x - z / 2, y - z / 2, z, z);
+    if (m.big) { pc.fillStyle = `rgba(${ICE},${(a * .22).toFixed(2)})`; pc.fillRect(x - 4, y - 4, 8, 8); }
+  }
+  pc.globalCompositeOperation = "source-over";
+}
+function drawTable(P, life) {
+  const {cx, cy, rx, ry, wall} = T, py = cy + wall * .3, t = beat;
+  const room = ctx.createRadialGradient(cx, cy, rx * .2, cx, cy, Math.max(W, H) * .75);                 // a hall of deep night
+  room.addColorStop(0, "#0B1430"); room.addColorStop(.5, "#070A16"); room.addColorStop(1, "#04050A");
+  ctx.fillStyle = room; ctx.fillRect(0, TOP, W, H - TOP);
+  for (const st of stars) {                               // far lights, which move less than the table: depth
+    const a = (.25 + .5 * Math.sin(t * .02 + st.ph) ** 2) * st.z * life, z = st.z > .8 ? 1.8 : 1.1;
+    ctx.fillStyle = `rgba(190,225,255,${a.toFixed(2)})`; ctx.fillRect(st.x * W - cam.x * 14 * st.z, TOP + st.y * (H - TOP) * .62 - cam.y * 8 * st.z, z, z);
+  }
+  ctx.globalAlpha = life;
+  for (let k = 1; k <= 4; k++) {                          // rings of the floor, catching a little of the light
+    ctx.strokeStyle = `rgba(${ICE},${.1 / k})`; ctx.lineWidth = 1; ell(cx, cy + wall, rx * (1.1 + k * .22), ry * (1.1 + k * .22)); ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(0,0,0,.6)"; ell(cx, cy + wall * 2.2, rx * 1.16, ry * 1.16); ctx.fill();         // shadow on the floor
+  const side = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);                                       // the wall of the table
+  side.addColorStop(0, "#0D0F16"); side.addColorStop(.5, "#343039"); side.addColorStop(1, "#0D0F16");
+  ctx.fillStyle = side; ctx.beginPath(); ctx.ellipse(cx, cy + wall, rx * 1.1, ry * 1.1, 0, 0, Math.PI);
+  ctx.ellipse(cx, cy, rx * 1.1, ry * 1.1, 0, Math.PI, 0, true); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = `rgba(${GOLD},.28)`; ctx.lineWidth = 1; ell(cx, cy + wall, rx * 1.1, ry * 1.1, 0, Math.PI); ctx.stroke();
+  const top = ctx.createLinearGradient(0, cy - ry, 0, cy + ry);                                        // its stone top, warm at the near edge
+  top.addColorStop(0, "#181A22"); top.addColorStop(.6, "#2B2A31"); top.addColorStop(1, "#4A3F3A");
+  ctx.fillStyle = top; ell(cx, cy, rx * 1.1, ry * 1.1); ctx.fill();
+  ctx.strokeStyle = `rgba(${GOLD},.6)`; ctx.lineWidth = 1.2; ctx.stroke();
+  const n = map.departments.length, turn = spin * 2 * Math.PI / n;                                     // engraving, turning with the table and breathing light
+  const lit = .5 + .5 * Math.sin(t * .03);
+  for (const big of [false, true]) {
+    ctx.beginPath();
+    for (let j = 0; j < 90; j++) {
+      if ((j % 9 === 0) !== big) continue;
+      const a = j * Math.PI / 45 - turn, c = Math.cos(a), s = Math.sin(a), r0 = big ? .975 : 1.0, r1 = big ? 1.085 : 1.06;
+      ctx.moveTo(cx + c * rx * r0, cy + s * ry * r0); ctx.lineTo(cx + c * rx * r1, cy + s * ry * r1);
+    }
+    ctx.strokeStyle = big ? `rgba(${GOLD},${.55 + .4 * lit})` : `rgba(${ICE},${.16 + .2 * (1 - lit)})`; ctx.lineWidth = big ? 1.6 : 1; ctx.stroke();
+  }
+  ctx.fillStyle = "#02040C"; ell(cx, cy + wall * .12, rx * .955, ry * .955); ctx.fill();               // the pool, set into the stone
+  ctx.save(); ell(cx, py, rx * .93, ry * .93); ctx.clip();
+  if (t % 3 === 0 || life < 1 || poolCv.width < 100) drawPool(t, life);        // it moves slowly, so it is repainted every third frame
+  ctx.drawImage(poolCv, cx - rx * .93, py - ry * .93, rx * 1.86, ry * 1.86);
+  ctx.globalCompositeOperation = "lighter";
+  P.forEach((p, i) => {                                 // a path of light from the brain to each department
+    const d = map.departments[i], ex = cx + Math.cos(p.a) * rx * .9, ey = py + Math.sin(p.a) * ry * .9, on = i === pick;
+    ctx.beginPath(); ctx.moveTo(cx, py); ctx.lineTo(ex, ey);
+    if (d.live) {
+      ctx.strokeStyle = `rgba(${GOLD},.18)`; ctx.lineWidth = 7; ctx.stroke();
+      ctx.setLineDash([4, 10]); ctx.lineDashOffset = still ? 0 : -t * .6; ctx.strokeStyle = `rgba(${GOLD},.95)`; ctx.lineWidth = 1.8; ctx.stroke(); ctx.setLineDash([]);
+    } else { ctx.strokeStyle = `rgba(${ICE},${on ? .5 : .12})`; ctx.lineWidth = on ? 1.4 : 1; ctx.stroke(); }
+    if (on && flash > 0) {                                // a pulse runs to the department you just chose
+      const f = 1 - flash, x = cx + (ex - cx) * f, y = py + (ey - py) * f, c = d.live ? GOLD : ICE;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 26); g.addColorStop(0, `rgba(${c},.95)`); g.addColorStop(1, `rgba(${c},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 26, 0, 7); ctx.fill();
+    }
+  });
+  ctx.globalCompositeOperation = "source-over"; ctx.restore();
+  ctx.globalAlpha = life;
+  ctx.globalCompositeOperation = "lighter";                                                            // the pool lights its own edge
+  for (const [w, a] of [[12, .07], [6, .16], [1.8, .95]]) { ctx.strokeStyle = `rgba(${ICE},${a})`; ctx.lineWidth = w; ell(cx, cy + wall * .12, rx * .955, ry * .955); ctx.stroke(); }
+  const mist = ctx.createRadialGradient(cx, py, rx * .1, cx, py - ry * .3, rx * 1.15);                 // and the air above it
+  mist.addColorStop(0, "rgba(60,150,255,.20)"); mist.addColorStop(.6, "rgba(40,110,255,.06)"); mist.addColorStop(1, "rgba(40,110,255,0)");
+  ctx.fillStyle = mist; ctx.fillRect(cx - rx * 1.3, py - ry * 2.4, rx * 2.6, ry * 3.6);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+}
+let raysCv = null;
+function rays() {                                          // sixteen rays, painted once
+  if (raysCv) return raysCv;
+  raysCv = document.createElement("canvas"); raysCv.width = raysCv.height = 320;
+  const c = raysCv.getContext("2d");
+  for (let j = 0; j < 16; j++) {
+    const a = j * Math.PI / 8, len = 160 * (.7 + .3 * ((j * 7) % 5) / 4);
+    const g = c.createLinearGradient(160, 160, 160 + Math.cos(a) * len, 160 + Math.sin(a) * len);
+    g.addColorStop(0, `rgba(${GOLD},.1)`); g.addColorStop(1, `rgba(${GOLD},0)`);
+    c.strokeStyle = g; c.lineWidth = 11; c.beginPath(); c.moveTo(160, 160); c.lineTo(160 + Math.cos(a) * len, 160 + Math.sin(a) * len); c.stroke();
+  }
+  return raysCv;
+}
+function drawPedestal(life) {
+  const {cx, cy, rx, ry, wall} = T, py = cy + wall * .3, ph = rx * .095;
+  ctx.globalAlpha = life;
+  ctx.fillStyle = "rgba(0,4,16,.55)"; ell(cx, py + 3, rx * .31, ry * .31); ctx.fill();
+  ctx.setLineDash([5, 5]); ctx.strokeStyle = `rgba(${ICE},.55)`; ctx.lineWidth = 3; ell(cx, py, rx * .285, ry * .285); ctx.stroke(); ctx.setLineDash([]);
+  for (let k = 0; k <= 12; k++) {                         // stone rings stacked into a plinth, cool below and warm above
+    const f = k / 12, r = .26 - .1 * f;
+    ctx.fillStyle = `rgb(${Math.round(20 + 46 * f)},${Math.round(26 + 28 * f)},${Math.round(44 + 6 * f)})`; ell(cx, py - f * ph, rx * r, ry * r); ctx.fill();
+    if (k % 4 === 0) { ctx.strokeStyle = k ? `rgba(${GOLD},.5)` : `rgba(${ICE},.7)`; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  ctx.fillStyle = "#3A3138"; ell(cx, py - ph, rx * .16, ry * .16); ctx.fill();
+  ctx.globalCompositeOperation = "lighter";
+  const glowA = .6 + .4 * Math.sin(beat / 26);
+  for (const [w, a] of [[9, .12], [4, .3], [1.6, 1]]) { ctx.strokeStyle = `rgba(${GOLD},${a * glowA})`; ctx.lineWidth = w; ell(cx, py - ph, rx * .115, ry * .115); ctx.stroke(); }
+  const beam = ctx.createLinearGradient(0, py - ph, 0, orb.y);                                         // light rising into the brain
+  beam.addColorStop(0, `rgba(${GOLD},.42)`); beam.addColorStop(1, `rgba(${GOLD},0)`);
+  ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(cx - rx * .1, py - ph); ctx.lineTo(cx + rx * .1, py - ph);
+  ctx.lineTo(cx + orb.r * .95, orb.y); ctx.lineTo(cx - orb.r * .95, orb.y); ctx.closePath(); ctx.fill();
+  const shaft = ctx.createLinearGradient(0, TOP, 0, orb.y + orb.r);                                    // and light falling on it from above
+  shaft.addColorStop(0, `rgba(${GOLD},0)`); shaft.addColorStop(.6, `rgba(${GOLD},.05)`); shaft.addColorStop(1, `rgba(${GOLD},.13)`);
+  ctx.fillStyle = shaft; ctx.beginPath(); ctx.moveTo(cx - orb.r * .5, TOP); ctx.lineTo(cx + orb.r * .5, TOP);
+  ctx.lineTo(cx + orb.r * 1.6, orb.y + orb.r); ctx.lineTo(cx - orb.r * 1.6, orb.y + orb.r); ctx.closePath(); ctx.fill();
+  const reach = orb.r * (2.6 + .25 * Math.sin(beat * .02));                                          // slow rays behind the brain
+  ctx.save(); ctx.translate(orb.x, orb.y); ctx.rotate(still ? 0 : beat * .0016);
+  ctx.drawImage(rays(), -reach, -reach, reach * 2, reach * 2); ctx.restore();
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+}
+function drawStation(i, p, life) {
+  const d = map.departments[i], on = i === pick, w = 42 * p.k, h = 30 * p.k, x = p.x, y = p.y, c = d.live ? GOLD : ICE;
+  const near = .5 + .5 * (p.s + 1) / 2, breath = .5 + .5 * Math.sin(beat * .04 + i * 1.3);
+  ctx.globalAlpha = near * life;
+  ctx.fillStyle = "rgba(0,0,0,.5)"; ell(x, y + 2, w * .78, w * .27); ctx.fill();
+  if (on) {                                               // the chosen department stands in rings of light
+    ctx.globalCompositeOperation = "lighter";
+    for (const [lw, a] of [[8, .12], [1.8, 1]]) { ctx.strokeStyle = `rgba(${c},${a})`; ctx.lineWidth = lw; ell(x, y + 2, w * .95, w * .33); ctx.stroke(); }
+    const f = (beat * .012) % 1; ctx.strokeStyle = `rgba(${c},${.7 * (1 - f)})`; ctx.lineWidth = 1.4; ell(x, y + 2, w * (.95 + f * .7), w * (.33 + f * .24)); ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  const face = ctx.createLinearGradient(0, y - h, 0, y);
+  face.addColorStop(0, d.live ? "#5A3D2A" : "#2B3142"); face.addColorStop(1, d.live ? "#1E1510" : "#10131C");
+  ctx.fillStyle = face; ctx.fillRect(x - w / 2, y - h, w, h);
+  ctx.strokeStyle = `rgba(${c},${d.live ? .9 : on ? .85 : .4})`; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2 + .5, y - h + .5, w - 1, h - 1);
+  ctx.fillStyle = d.live ? "#7A5238" : "#3A4258"; ell(x, y - h, w / 2, w * .17); ctx.fill(); ctx.stroke();
+  const g = p.k * 1.05, ink = d.live ? "#FFE0C2" : on ? "#F1F8FF" : "#B8C6DA";                          // the people of the department
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x, y - h * .62, 3.2 * g, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y - h * .1, 6.5 * g, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+  ctx.globalCompositeOperation = "lighter";
+  const gem = ctx.createRadialGradient(x, y - h, 0, x, y - h, w * (d.live || on ? .62 : .42));         // a light set into the top of each station
+  gem.addColorStop(0, `rgba(${c},${d.live ? .95 : on ? .8 : .3 + .25 * breath})`); gem.addColorStop(1, `rgba(${c},0)`);
+  ctx.fillStyle = gem; ctx.beginPath(); ctx.arc(x, y - h, w * .62, 0, 7); ctx.fill();
+  if (d.live || on) {                                     // a column of light: tall and warm when connected, a cool glimmer when chosen
+    const bh = (d.live ? 190 : 80) * p.k, beam = ctx.createLinearGradient(0, y - h - bh, 0, y - h);
+    beam.addColorStop(0, `rgba(${c},0)`); beam.addColorStop(1, `rgba(${c},${d.live ? .6 : .3})`);
+    ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(x - w * .3, y - h); ctx.lineTo(x + w * .3, y - h); ctx.lineTo(x + w * .55, y - h - bh); ctx.lineTo(x - w * .55, y - h - bh); ctx.closePath(); ctx.fill();
+    for (let j = 0; j < (d.live ? 12 : 5); j++) {
+      const f = (((still ? 0 : beat * .007) + j / 12) % 1), sx = x + Math.sin(j * 2.4 + beat * .02) * w * .3 * (1 + f * .7);
+      ctx.fillStyle = `rgba(${d.live ? "255,226,196" : "225,247,255"},${.9 * (1 - f)})`; ctx.beginPath(); ctx.arc(sx, y - h - f * bh, 1.4, 0, 7); ctx.fill();
+    }
+  }
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+}
+function drawAir(life) {                                  // sparks rising out of the pool
+  const {cx, cy, rx, ry} = T;
+  ctx.globalCompositeOperation = "lighter";
+  for (const m of motes) {
+    const f = (m.y + (still ? 0 : beat * .0012 * m.v)) % 1, x = cx + m.x * rx * .95 + Math.sin(beat * .01 + m.ph) * 16, y = cy + ry * .5 * (1 - Math.abs(m.x)) - f * (ry * 2.6);
+    const a = .75 * Math.sin(f * Math.PI) * (.45 + .55 * Math.sin(beat * .035 + m.ph)) * life;
+    ctx.fillStyle = `rgba(${m.warm ? GOLD : "190,238,255"},${Math.max(0, a)})`; ctx.beginPath(); ctx.arc(x, y, m.size, 0, 7); ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+}
+function seatLabels(P) {                                  // the names and click areas follow the stations
+  const box = $("stations").children;
+  P.forEach((p, i) => { const b = box[i]; if (!b) return;
+    b.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) scale(${p.k.toFixed(3)})`;
+    b.style.opacity = (.45 + .55 * (p.s + 1) / 2).toFixed(2); b.style.zIndex = Math.round(100 + p.s * 50);
+    b.classList.toggle("on", i === pick); });
+  const brain = $("brainbtn"); if (brain) { brain.style.left = orb.x + "px"; brain.style.top = orb.y + "px"; brain.style.width = brain.style.height = orb.r * 2.2 + "px"; }
+}
+function banner(arrive) {                                 // the chosen department, named above the table
+  const d = map.departments[pick]; if (!d) return;
+  const box = $("realm");
+  if (arrive) { box.classList.remove("swap"); void box.offsetWidth; box.classList.add("swap"); }       // the name arrives only when the choice changes
+  box.classList.toggle("open", !!d.live);
+  $("realm-name").textContent = d.name;
+  $("realm-state").textContent = d.live ? "DEPARTMENT OPEN" : "DEPARTMENT NOT CONNECTED";
+  $("realm-about").textContent = d.about || "";
+  $("realm-next").textContent = d.live ? "Press Enter to step inside." : "MAGI already holds its knowledge. Its agents come next.";
+  $("enter").hidden = !d.live; $("enter-label").hidden = !d.live;
+}
+function choose(i) { const n = map.departments.length; pick = ((i % n) + n) % n; flash = 1; banner(true); $("tip").hidden = true; }
+function openPick() {
+  const d = map.departments[pick];
+  if (!d.live) return toast(`${d.name} is not connected yet. MAGI already holds its knowledge; its agents come next.`);
+  if (still || Math.abs(pick - spin) > .05 && Math.abs(Math.abs(pick - spin) - map.departments.length) > .05) return enter(d, DEPT_COLOURS[pick % 6]);
+  if (!diving) diving = performance.now();              // the camera dives into the station, then the department opens
+}
+function seats() {                                        // one click area per department, plus the brain itself
+  const box = $("stations"); box.replaceChildren();
+  map.departments.forEach((d, i) => {
+    const b = document.createElement("button"), s = document.createElement("span");
+    b.className = "st" + (d.live ? " live" : ""); b.type = "button"; s.textContent = d.name.toUpperCase(); b.appendChild(s);
+    b.setAttribute("aria-label", d.live ? `${d.name}, open` : `${d.name}, not connected yet`);
+    b.addEventListener("click", () => i === pick ? openPick() : choose(i));
+    const card = () => { const p = place(i); deptCard(d, p.x, p.y - 20, d.live ? "#FFC480" : "#6FD8FF"); };
+    b.addEventListener("mouseenter", card); b.addEventListener("focus", card);
+    b.addEventListener("mouseleave", () => $("tip").hidden = true); b.addEventListener("blur", () => $("tip").hidden = true);
+    box.appendChild(b);
+  });
+  const brain = document.createElement("button"); brain.id = "brainbtn"; brain.type = "button";
+  brain.setAttribute("aria-label", "Talk to MAGI: switch the microphone on, wake or sleep");
+  brain.addEventListener("click", brainClick); brain.addEventListener("mousemove", readDot);
+  brain.addEventListener("mouseleave", () => { hover = null; $("tip").hidden = true; });
+  box.appendChild(brain);
+}
+
+// ---------- small drawings shared by the department view ----------
+function people(g, cx, cy, s, colour) {                  // small "team" glyph
+  el("circle", {cx, cy: cy - 4 * s, r: 3.4 * s, fill: "none", stroke: colour, "stroke-width": 1.6}, g);
+  el("path", {d: `M${cx - 7 * s} ${cy + 8 * s}c0-5 3-8 7-8s7 3 7 8`, fill: "none", stroke: colour, "stroke-width": 1.6, "stroke-linecap": "round"}, g);
+}
+function button(g, label, act) {
+  g.setAttribute("class", (g.getAttribute("class") || "") + " node"); g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
+  g.addEventListener("click", act);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } });
+}
+function deptCard(d, nx, ny, colour) {                 // what a department is, and what MAGI already knows for it
+  const tip = $("tip"); tip.replaceChildren();
+  const b = document.createElement("b"); b.style.color = colour; b.textContent = d.name.toUpperCase() + (d.live ? " · CONNECTED" : " · NOT CONNECTED YET");
+  tip.append(b, d.about || "");
+  if ((d.knows || []).length) {
+    const h = document.createElement("small"), ul = document.createElement("ul"); h.textContent = "MAGI ALREADY KNOWS";
+    d.knows.forEach(k => { const li = document.createElement("li"); li.textContent = k; ul.appendChild(li); });
+    tip.append(h, ul);
+  }
+  const foot = document.createElement("small"); foot.textContent = d.live ? "CLICK TO SEE HOW IT WORKS" : "ITS AGENTS COME NEXT"; tip.append(foot);
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight, right = nx >= orb.tx;
+  tip.style.left = Math.max(8, Math.min(W - w - 8, right ? nx + 34 : nx - 34 - w)) + "px";
+  tip.style.top = Math.max(TOP + 6, Math.min(H - h - 8, ny - h / 2)) + "px";
+}
+
+// ---------- inside a department: jobs, agents, tools ----------
+function drawDept() {
+  const agents = map.marketing, n = agents.length, stageH = H - TOP, colour = dept.colour;
+  const yTool = TOP + stageH * .13, yAgent = TOP + stageH * .37, yJob = TOP + stageH * .57;
+  const dx = orb.tx, dy = orb.ty - orb.tr * 1.13 - 26;
+  const tools = [...new Set(agents.flatMap(a => a.tools))], tx = {};
+  tools.forEach((t, i) => tx[t] = {x: W * (.04 + .92 * (i + .5) / tools.length), y: yTool + (i % 2 ? 13 : -13)});
+  el("text", {x: W / 2, y: TOP + 32, "text-anchor": "middle", fill: "#fff", "font-size": 17, "letter-spacing": 6, "font-weight": 500, class: "in"}, svg, dept.name.toUpperCase());
+  const lines = el("g", {}), nodes = el("g", {});
+  agents.forEach((a, i) => {
+    const x = W * (.06 + .88 * (i + .5) / n), t0 = .1 + i * .05;
+    el("line", {x1: dx, y1: dy, x2: x, y2: yJob + 6, stroke: "rgba(255,255,255,.8)", "stroke-width": 1.6, "stroke-dasharray": "1.5 6.5", "stroke-linecap": "round",
+                class: "in flow lit", style: `animation-delay:${t0}s,0s`, "data-a": a.key}, lines);
+    el("line", {x1: x, y1: yJob - 6, x2: x, y2: yAgent + 16, stroke: "rgba(255,255,255,.85)", "stroke-width": 1.2, pathLength: 1, class: "draw lit", style: `animation-delay:${t0 + .3}s`, "data-a": a.key}, lines);
+    a.tools.forEach(t => el("line", {x1: x, y1: yAgent - 16, x2: tx[t].x, y2: tx[t].y + 11, stroke: "rgba(201,206,214,.5)", "stroke-width": 1, pathLength: 1,
+                                    class: "draw lit", style: `animation-delay:${t0 + .65}s`, "data-a": a.key, "data-t": t}, lines));
+    const job = el("g", {class: "in lit", style: `animation-delay:${t0 + .15}s`, "data-a": a.key}, nodes);
+    el("rect", {x: x - 4.5, y: yJob - 4.5, width: 9, height: 9, fill: "#09090B", stroke: "#fff", "stroke-width": 1.4}, job);
+    el("text", {x: x + 11, y: yJob + 3.5, fill: "#B9C4D6", "font-size": 10}, job, cut(a.job, Math.max(12, Math.floor((W * .88 / n - 18) / 6.1))));
+    const g = el("g", {class: "in lit", style: `animation-delay:${t0 + .45}s`, "data-a": a.key}, nodes);
+    el("circle", {cx: x, cy: yAgent, r: 16, fill: "#09090B", stroke: "#fff", "stroke-width": 2, class: "ring"}, g);
+    people(g, x, yAgent, .95, "#fff");
+    el("text", {x: x + 23, y: yAgent - 1, fill: "#fff", "font-size": 11.5}, g, a.name);
+    el("text", {x: x + 23, y: yAgent + 13, fill: colour, "font-size": 10}, g, cut(a.stat, Math.max(10, Math.floor((W * .88 / n - 30) / 6.1))));
+    button(g, `${a.name}: ${a.job}`, () => select(a.key));
+    g.addEventListener("mouseenter", () => light(a.key)); g.addEventListener("mouseleave", () => light(sel));
+    g.addEventListener("focus", () => light(a.key));
+  });
+  tools.forEach((t, i) => {
+    const p = tx[t], g = el("g", {class: "in lit", style: `animation-delay:${.85 + i * .03}s`, "data-tool": t}, nodes);
+    el("circle", {cx: p.x, cy: p.y, r: 11, fill: "#09090B", stroke: "#C77B4A", "stroke-width": 2, class: "ring"}, g);
+    el("circle", {cx: p.x, cy: p.y, r: 3.2, fill: "#C77B4A"}, g);
+    el("text", {x: p.x, y: p.y - 18, "text-anchor": "middle", fill: "#E8C4A8", "font-size": 10.5}, g, t);
+    button(g, `Tool: ${t}`, () => showTool(t));
+  });
+  const d = el("g", {class: "in"});
+  el("circle", {cx: dx, cy: dy, r: 20, fill: "#09090B", stroke: colour, "stroke-width": 2}, d);
+  people(d, dx, dy, 1.05, colour);
+}
+let sel = null;
+function light(key) {                                    // show one agent's path; dim the rest
+  svg.querySelectorAll(".lit").forEach(e => {
+    const mine = !key || e.dataset.a === key || (e.dataset.tool && map.marketing.find(a => a.key === key).tools.includes(e.dataset.tool));
+    e.classList.toggle("dim", !mine);
+  });
+}
+function select(key) {
+  sel = sel === key ? null : key; light(sel);
+  const a = map.marketing.find(x => x.key === sel), c = $("card");
+  if (!a) { c.hidden = true; return; }
+  c.hidden = false; c.replaceChildren();
+  const add = (tag, text, cls) => { const e = document.createElement(tag); e.textContent = text; if (cls) e.className = cls; c.appendChild(e); return e; };
+  add("h2", a.name.toUpperCase()); add("p", a.job).style.color = "var(--fg)"; add("p", a.does);
+  add("p", a.detail || a.stat).style.color = dept.colour;
+  a.tools.forEach(t => { const p = add("p", ""); const b = document.createElement("span"); b.className = "tool"; b.textContent = t + " · "; p.append(b, map.tools[t] || ""); });
+}
+function showTool(t) {
+  sel = null; light(null);
+  svg.querySelectorAll(".lit").forEach(e => e.classList.toggle("dim", !(e.dataset.tool === t || e.dataset.t === t || (e.dataset.a && !e.dataset.t && map.marketing.find(a => a.key === e.dataset.a).tools.includes(t)))));
+  const c = $("card"); c.hidden = false; c.replaceChildren();
+  const add = (tag, text) => { const e = document.createElement(tag); e.textContent = text; c.appendChild(e); return e; };
+  add("h2", t.toUpperCase()); add("p", map.tools[t] || "").style.color = "var(--fg)";
+  add("p", "Used by: " + map.marketing.filter(a => a.tools.includes(t)).map(a => a.name).join(", "));
+}
+
+// ---------- switching views ----------
+function render() {
+  svg.replaceChildren();
+  if (!map) return;
+  layout();
+  const home = view === "home";
+  document.body.classList.toggle("table", home);
+  $("stats").hidden = !home; $("pill").hidden = home; $("card").hidden = true; sel = null;
+  for (const id of ["stations", "realm", "keys"]) $(id).hidden = !home;
+  if (!home) $("stats").style.transform = $("talk").style.transform = "";      // the panels sit flat outside the table view
+  if (home) { if (pick >= map.departments.length) pick = 0; seats(); banner(); }
+  else { $("pill-name").textContent = dept.name.toUpperCase(); drawDept(); }
+}
+function enter(d, colour) { view = "dept"; dept = {...d, colour}; hover = null; $("tip").hidden = true; try { history.replaceState(null, "", "#" + d.key); } catch (_) {} render(); }
+function leave() { view = "home"; dept = null; born = performance.now() - 1100; diving = 0; try { history.replaceState(null, "", "#"); } catch (_) {} render(); }
+$("back").addEventListener("click", leave);
+function spaceForMic(e) {                                  // the space bar switches the microphone on and off
+  if (e.code !== "Space" || e.repeat || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return false;
+  const el = document.activeElement;
+  if (el && (/^(INPUT|TEXTAREA|SELECT|BUTTON|A|SUMMARY)$/.test(el.tagName) || el.isContentEditable)) return false;
+  e.preventDefault();
+  micOn ? micStop() : micStart();
+  return true;
+}
+addEventListener("message", e => {                         // the dashboard inside MAGI passes its space bar on
+  if (e.origin === location.origin && e.data === "magi-mic") micOn ? micStop() : micStart();
+});
+addEventListener("keydown", e => {
+  if (spaceForMic(e)) return;
+  if (e.key === "Escape") return shellOpen ? closeShell() : view !== "home" && leave();
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey || !map || view !== "home" || shellOpen) return;
+  const k = e.key.toLowerCase();                          // A and D (or the arrows) turn the table; Enter steps inside
+  if (k === "a" || k === "arrowleft") { e.preventDefault(); choose(pick - 1); }
+  else if (k === "d" || k === "arrowright") { e.preventDefault(); choose(pick + 1); }
+  else if (k === "enter" && document.activeElement.tagName !== "BUTTON") { e.preventDefault(); openPick(); }
+});
+$("keys").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; b.dataset.turn ? choose(pick + +b.dataset.turn) : openPick(); });
+
+// ---------- the numbers beside the brain ----------
+function drawStats() {
+  const s = $("stats"); s.replaceChildren();
+  const add = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; s.appendChild(e); return e; };
+  add("h2").textContent = "MAGI · KNOWLEDGE BRAIN";
+  add("div", "big").textContent = fmt(map.total);
+  add("p").textContent = "pieces of knowledge" + (map.total > map.dots.length ? ` · ${fmt(map.dots.length)} drawn` : "");
+  const bars = add("div", "bars"), max = Math.max(1, ...Object.values(map.kinds));
+  for (const k in KIND) {
+    const n = map.kinds[k] || 0; if (!n) continue;
+    const b = document.createElement("div"); b.className = "bar";
+    const name = document.createElement("span"), num = document.createElement("b"), line = document.createElement("i");
+    name.textContent = KIND[k][0]; num.textContent = fmt(n); line.style.setProperty("--w", Math.max(3, n / max * 100) + "%"); line.style.setProperty("--c", KIND[k][1]);
+    b.append(name, num, line); bars.appendChild(b);
+  }
+  const w = add("p"); const wb = document.createElement("b"); wb.textContent = fmt(map.waiting); w.append(wb, " doubts waiting outside, unused until the manager approves");
+  const r = add("p"); const rb = document.createElement("b"), sb = document.createElement("b"); rb.textContent = fmt(map.pages); sb.textContent = fmt(map.sites); r.append(rb, " pages read · ", sb, " sites");
+}
+
+// ---------- data ----------
+let lastTotal = null;
+async function load() {
+  const r = await fetch("/api/magi/map"); if (!r.ok) throw new Error("map " + r.status);
+  const fresh = await r.json(), changed = !map || fresh.dots.length !== map.dots.length || fresh.total !== map.total || JSON.stringify(fresh.marketing) !== JSON.stringify(map.marketing);
+  if (lastTotal != null && fresh.total > lastTotal) { ripples.push(1); toast(`MAGI learned ${fmt(fresh.total - lastTotal)} new piece${fresh.total - lastTotal > 1 ? "s" : ""} of knowledge.`); }
+  lastTotal = fresh.total;
+  const first = !map; map = fresh;
+  if (first || changed) {
+    placeDots();
+    if (first) { pick = spin = Math.max(0, map.departments.findIndex(x => x.live));
+      const want = location.hash.slice(1), d = map.departments.find(x => x.key === want && x.live);
+      if (d) { view = "dept"; dept = {...d, colour: DEPT_COLOURS[map.departments.indexOf(d) % 6]}; } }
+    if (!(view === "dept" && !first)) render();          // do not redraw the department tree under the reader
+    drawStats();
+  }
+}
+async function addFact(e) {
+  e.preventDefault();
+  const v = $("fact").value.trim(); if (v.length < 8) return toast("Type the fact in a full sentence first.");
+  const r = await fetch("/api/review/rule", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({kind: "add_knowledge", content: v})});
+  if (!r.ok) return toast("MAGI could not take that in. Try again.");
+  $("fact").value = ""; load().catch(() => {});
+}
+$("dump").addEventListener("submit", addFact);
+const stage = $("stage");
+addEventListener("dragover", e => { e.preventDefault(); stage.classList.add("over"); });
+addEventListener("dragleave", e => { if (!e.relatedTarget) stage.classList.remove("over"); });
+addEventListener("drop", async e => {
+  e.preventDefault(); stage.classList.remove("over");
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  const body = new FormData(); body.append("file", f); toast(`MAGI is reading ${f.name}…`);
+  const r = await fetch("/api/magi/drop", {method: "POST", body}), d = await r.json().catch(() => ({}));
+  if (!r.ok) return toast(d.detail || "MAGI could not read that file.");
+  load().catch(() => {});
+});
+
+// ---------- hover a dot to read the knowledge behind it ----------
+function readDot(e) {
+  if (view !== "home" || !dots.length) return;
+  let best = null, bd = 100;
+  for (const d of dots) { const q = (d.sx - e.clientX) ** 2 + (d.sy - e.clientY) ** 2; if (q < bd) { bd = q; best = d; } }
+  hover = best; const tip = $("tip");
+  if (!best) { tip.hidden = true; return; }
+  tip.replaceChildren(); const b = document.createElement("b"); b.style.color = best.colour;
+  b.textContent = (KIND[best.doc] || KIND.core)[0].toUpperCase() + (best.section ? " · " + cut(best.section, 60) : "");
+  tip.append(b, best.body + (best.body.length >= 240 ? "…" : "")); tip.hidden = false;
+  tip.style.left = Math.min(e.clientX + 14, W - 336) + "px"; tip.style.top = Math.min(e.clientY + 14, H - 130) + "px";
+}
+
+function resize() {
+  const dpr = Math.min(sharp, devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  orb.r = 0; layout(); render();
+}
+
+// ---------- opening screens: the marketing dashboard opens inside MAGI, so MAGI keeps listening ----------
+const shell = $("shell");
+let shellOpen = false;
+function openShell(tab) {
+  if (shellOpen) { try { shell.contentWindow.location.hash = tab; } catch (_) { shell.src = "/marketing#" + tab; } return; }
+  shellOpen = true; shell.src = "/marketing#" + tab; shell.hidden = false; $("close").hidden = false;
+  document.body.classList.add("shell"); $("talk").classList.add("mini");
+}
+function closeShell() {
+  if (!shellOpen) return;
+  shellOpen = false; shell.hidden = true; shell.src = "about:blank"; $("close").hidden = true;
+  document.body.classList.remove("shell"); $("talk").classList.remove("mini");
+}
+function go(screen) {
+  const m = map && map.departments.find(d => d.live);
+  if (screen === "home") { closeShell(); if (view !== "home") leave(); return; }
+  if (!m) return;
+  const colour = DEPT_COLOURS[map.departments.indexOf(m) % 6];
+  pick = map.departments.indexOf(m);
+  if (screen === "marketing_map") { closeShell(); if (view !== "dept") enter(m, colour); return; }
+  const tab = ["ideas", "content", "approvals", "crawler"].includes(screen) ? screen : "ideas";
+  if (shellOpen) return openShell(tab);
+  if (view !== "dept") enter(m, colour);                 // show how it is built on the way in
+  setTimeout(() => openShell(tab), still ? 0 : 1800);
+}
+$("close").addEventListener("click", () => go("home"));
+$("open").addEventListener("click", () => openShell("ideas"));
+$("mini").addEventListener("click", () => $("talk").classList.toggle("mini"));
+
+// ---------- talking to MAGI ----------
+const log = $("log"), heard = $("heard"), sayBox = $("say");
+const session = "magi-" + Math.random().toString(36).slice(2, 10);
+// Speech-to-text may write the wake phrase several ways.
+const WAKE = /\b(?:wake[\s-]*up[\s,.!-]*(?:time|magi|maggie|maggi|magic|mai|my|may)|(?:hey|hi|okay|ok)[\s,]+(?:magi|maggie|maggi|maggy|magee))\b[\s,.!?]*/i;
+const SLEEP = /\b(?:sleep|good ?night|that'?s all for now|stop listening|stand down)\b/i;
+const IDLE_SLEEP_MS = 180000;      // after 3 quiet minutes MAGI goes back to sleep
+// Plain "open …" requests are done at once, without waiting for the thinking step.
+const NAV = [[/\b(?:approval|approve)/i, "approvals", "the approvals"], [/\bidea/i, "ideas", "the ideas"], [/\b(?:content|blog|creative|video)/i, "content", "the content"],
+             [/\bcrawler/i, "crawler", "the crawler"], [/\bmarketing\b.*\b(?:map|agents|built|works)|\b(?:map|agents)\b.*\bmarketing/i, "marketing_map", "how marketing is built"],
+             [/\bmarketing/i, "marketing", "marketing"], [/\b(?:home|magi|brain|main screen)\b/i, "home", "the home screen"]];
+const NAV_VERB = /^(?:please\s+)?(?:open|go to|take me to|launch|bring up|switch to|close|go back)\b/i;
+
+let micOn = false, awake = false, speakOn = true, chatAbort = null, turn = 0, idleTimer = null;
+const MOODS = {off: "MIC OFF", asleep: 'RESTING · SAY "WAKE UP TIME"', listening: "LISTENING", hearing: "HEARING YOU", thinking: "THINKING", speaking: "SPEAKING"};
+function setState(s) { mood = s; $("mood").textContent = MOODS[s]; }
+function rest() {
+  setState(!micOn ? "off" : awake ? "listening" : "asleep");
+  $("mic").textContent = micOn ? "MIC OFF" : "MIC ON"; $("mic").classList.toggle("on", micOn);
+}
+function line(who, body, cls) {
+  const d = document.createElement("div"), w = document.createElement("b");
+  d.className = "m " + cls; w.textContent = who; d.append(w, document.createTextNode(body));
+  log.append(d); log.scrollTop = log.scrollHeight;
+  while (log.children.length > 40) log.firstChild.remove();
+}
+function beep(freq, ms = 110) {
+  try {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; g.gain.value = 0.05; o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + ms / 1000);
+  } catch (_) {}
+}
+function touch() {
+  clearTimeout(idleTimer);
+  if (awake) idleTimer = setTimeout(() => { if (awake && !speaking && !chatAbort) goSleep(); else touch(); }, IDLE_SLEEP_MS);
+}
+function wake() { if (awake) return; awake = true; ripples.push(1); beep(660); setTimeout(() => beep(990), 120); rest(); touch(); }
+function goSleep() { awake = false; turn++; if (chatAbort) { chatAbort.abort(); chatAbort = null; } stopSpeaking(); beep(520); setTimeout(() => beep(390), 120); heard.textContent = ""; rest(); }
+
+// voice out
+let speaking = false, audioEl = null, ttsDownUntil = 0;
+function chunks(t) {
+  const parts = t.replace(/[*_#`>]/g, "").replace(/https?:\/\/\S+/g, "a link").match(/[^.!?\n]+[.!?]*\s*/g) || [t];
+  const out = []; let cur = "";
+  // the first sentence goes alone so MAGI starts speaking sooner; later ones are grouped
+  for (const p of parts) { if (cur && (!out.length || (cur + p).length > 180)) { out.push(cur.trim()); cur = p; } else cur += p; }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+async function fetchVoice(t) {
+  if (Date.now() < ttsDownUntil) return null;
+  try {
+    const r = await fetch("/api/mai/tts", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text: t})});
+    if (!r.ok) { ttsDownUntil = Date.now() + 15000; return null; }     // try her own voice again soon; the browser's voice fills in
+    return URL.createObjectURL(await r.blob());
+  } catch (_) { ttsDownUntil = Date.now() + 8000; return null; }
+}
+function browserSay(t, done) {
+  if (!("speechSynthesis" in window)) return done();
+  const u = new SpeechSynthesisUtterance(t), vs = speechSynthesis.getVoices();
+  u.voice = vs.find(v => v.name === "Google UK English Female") || vs.find(v => /^(Samantha|Karen|Moira|Tessa|Veena)$/.test(v.name)) ||
+            vs.find(v => /female/i.test(v.name) && /^en/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  u.rate = 1.02; u.pitch = 1.05; u.onend = u.onerror = done;
+  speechSynthesis.speak(u);
+}
+async function speak(t, myTurn) {
+  t = String(t || "").trim();
+  if (!speakOn || !t) return rest();
+  const parts = chunks(t);
+  speaking = true; echo = 0; setState("speaking");
+  let next = fetchVoice(parts[0]);
+  for (let i = 0; i < parts.length; i++) {
+    const url = await next;
+    if (myTurn !== turn || !speaking) return;
+    next = i + 1 < parts.length ? fetchVoice(parts[i + 1]) : null;
+    await new Promise(done => {
+      if (url) {
+        audioEl = new Audio(url);
+        audioEl.onended = audioEl.onerror = () => { URL.revokeObjectURL(url); done(); };
+        audioEl.onpause = done;
+        audioEl.play().catch(e => {
+          if (e && e.name === "NotAllowedError") {          // Chrome wants one click on the page before it lets sound play
+            $("talk").classList.remove("mini"); $("michint").textContent = "Chrome is blocking sound on this page. Click anywhere once, then ask again.";
+          }
+          done();
+        });
+      } else browserSay(parts[i], done);
+    });
+    if (myTurn !== turn || !speaking) return;
+  }
+  speaking = false; audioEl = null; deafUntil = performance.now() + 400; rest(); touch();
+}
+function stopSpeaking() {
+  if (speaking) deafUntil = performance.now() + 250;
+  speaking = false;
+  if (audioEl) { audioEl.pause(); audioEl = null; }
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+
+// thinking
+async function ask(msg) {
+  msg = msg.trim();
+  if (!msg) return;
+  const myTurn = ++turn;                    // a newer request replaces whatever was in progress
+  if (chatAbort) chatAbort.abort();
+  stopSpeaking();
+  sayBox.value = ""; heard.textContent = "";
+  line("YOU", msg, "you");
+  touch();
+  if (NAV_VERB.test(msg) && msg.split(/\s+/).length <= 8) {
+    const hit = /^(?:please\s+)?(?:close|go back)\b/i.test(msg) ? NAV[NAV.length - 1] : NAV.find(n => n[0].test(msg));
+    if (hit) { chatAbort = null; go(hit[1]); const reply = `Opening ${hit[2]}.`; line("MAGI", reply, "magi"); return speak(reply, myTurn); }
+  }
+  chatAbort = new AbortController();
+  setState("thinking");
+  try {
+    const r = await fetch("/api/mai/chat", {method: "POST", signal: chatAbort.signal,
+      headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: msg, session})});
+    const data = await r.json();
+    if (myTurn !== turn) return;
+    if (!r.ok) throw new Error(data.detail || "MAGI could not answer.");
+    chatAbort = null;
+    line("MAGI", data.reply, "magi");
+    (data.actions || []).slice(-1).forEach(go);
+    speak(data.reply, myTurn);
+  } catch (e) {
+    if (e.name === "AbortError" || myTurn !== turn) return;
+    chatAbort = null;
+    line("PROBLEM", String(e.message).slice(0, 240) + " Try again in a moment.", "err");
+    rest();
+  }
+}
+
+// voice in: always-open microphone
+let actx = null, analyser = null, stream = null, recorder = null, recChunks = [], ticker = null;
+let noise = 0.01, loud = 0, quiet = 0, inSpeech = false, speechMs = 0, segStart = 0, keep = false;
+let echo = 0, deafUntil = 0;       // how loud MAGI's own voice reaches the microphone; and a short pause after she stops
+const STEP = 40, buf = new Float32Array(1024);
+function newSegment() {
+  recChunks = []; keep = false; inSpeech = false; loud = quiet = speechMs = 0; segStart = performance.now();
+  const rec = recorder = new MediaRecorder(stream);
+  rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  rec.onstop = () => {
+    const wanted = keep, ms = speechMs, blob = new Blob(recChunks, {type: rec.mimeType});
+    if (micOn) newSegment();
+    if (wanted) heardSpeech(blob, ms);
+  };
+  rec.start();
+}
+function endSegment(wanted) { keep = wanted; if (recorder && recorder.state !== "inactive") recorder.stop(); }
+function listen() {
+  if (!micOn || !recorder || recorder.state !== "recording") return;
+  analyser.getFloatTimeDomainData(buf);
+  let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+  const rms = Math.sqrt(sum / buf.length);
+  // While MAGI is talking, her own voice comes back through the speakers (and other people may be talking near
+  // the microphone). She yields only to a voice clearly louder than that, held for more than half a second.
+  const sounding = speaking && audioEl && !audioEl.paused;
+  if (sounding) echo = echo ? echo * .93 + rms * .07 : rms;
+  const thr = speaking ? Math.max(0.075, noise * 6, echo * 2.6) : Math.max(0.018, noise * 3.2);
+  lvl = 1 + Math.min(rms * 4, 0.16);
+  if (performance.now() < deafUntil && !inSpeech) { loud = 0; return; }     // the tail of her own voice is not you
+  if (rms > thr) {
+    loud++; quiet = 0;
+    if (!inSpeech && loud >= (speaking ? 15 : 3)) {
+      inSpeech = true;
+      if (speaking) { stopSpeaking(); turn++; }          // you interrupted: MAGI stops talking at once
+      if (awake) setState("hearing");
+    }
+    if (inSpeech) speechMs += STEP;
+  } else {
+    if (!inSpeech) { noise = noise * 0.96 + rms * 0.04; loud = 0; }
+    else if (++quiet * STEP >= 680) return endSegment(speechMs >= 320);   // you stopped talking
+  }
+  if (inSpeech && speechMs > 25000) return endSegment(true);
+  // nothing said: start a fresh clip every 2 s so each clip begins just before the speech
+  if (!inSpeech && performance.now() - segStart > 2000) endSegment(false);
+}
+let sttBusy = 0;
+async function heardSpeech(blob, ms) {
+  if (!awake && (ms > 6000 || sttBusy > 0)) return;        // asleep: only short phrases can be the wake words
+  sttBusy++;
+  if (awake) heard.textContent = "…";
+  try {
+    const r = await fetch("/api/mai/stt", {method: "POST", headers: {"Content-Type": blob.type || "audio/webm"}, body: blob});
+    const said = r.ok ? ((await r.json()).text || "").trim() : "";
+    heard.textContent = "";
+    if (!said) { if (awake && !speaking && !chatAbort) rest(); return; }
+    const w = said.match(WAKE);
+    if (!awake) {
+      if (!w) return;
+      wake();
+      const after = said.slice(w.index + w[0].length).trim();
+      if (after.split(/\s+/).filter(Boolean).length >= 2) ask(after);
+      return;
+    }
+    if (SLEEP.test(said) && said.split(/\s+/).length <= 6) { line("YOU", said, "you"); return goSleep(); }
+    const cmd = w ? said.slice(w.index + w[0].length).trim() : said;
+    if (cmd) ask(cmd); else rest();
+  } catch (_) { if (awake) rest(); }
+  finally { sttBusy--; }
+}
+function remember(on) { try { localStorage.setItem("magi-mic", on ? "1" : "0"); } catch (_) {} }
+async function micStart() {
+  if (micOn) return true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}});
+  } catch (e) {
+    $("talk").classList.remove("mini");
+    $("michint").textContent = e.name === "NotAllowedError"
+      ? "Microphone is blocked. In Chrome: click the icon at the left of the address bar → Microphone → Allow, then reload. On the Mac: System Settings → Privacy & Security → Microphone → turn on Google Chrome."
+      : "No microphone found (" + e.name + "). Check that one is connected and not in use by another app.";
+    return false;
+  }
+  $("michint").textContent = "";
+  actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+  await actx.resume();
+  analyser = actx.createAnalyser(); analyser.fftSize = 1024;
+  actx.createMediaStreamSource(stream).connect(analyser);
+  micOn = true; newSegment();
+  ticker = setInterval(listen, STEP);
+  remember(true); rest();
+  return true;
+}
+function micStop() {
+  if (!micOn) return;
+  micOn = false; awake = false; turn++; clearInterval(ticker); stopSpeaking();
+  try { if (recorder && recorder.state !== "inactive") recorder.stop(); } catch (_) {}
+  stream.getTracks().forEach(t => t.stop());
+  lvl = 1; remember(false); rest();
+}
+async function brainClick() { if (!micOn) { if (await micStart()) wake(); return; } awake ? goSleep() : wake(); }
+$("mic").addEventListener("click", () => micOn ? micStop() : micStart());
+$("askf").addEventListener("submit", e => { e.preventDefault(); ask(sayBox.value); });
+$("voice").addEventListener("click", e => {
+  speakOn = !speakOn; e.target.classList.toggle("on", speakOn);
+  e.target.textContent = speakOn ? "VOICE ON" : "VOICE OFF"; e.target.setAttribute("aria-pressed", speakOn);
+  if (!speakOn) { stopSpeaking(); rest(); } else speak("My voice is on.", turn);        // a quick way to hear that sound works
+});
+// The browser only lets a page open the microphone after a click, so a remembered "mic on" resumes on the first click or key press.
+let wantMic = false;
+try { wantMic = localStorage.getItem("magi-mic") === "1"; } catch (_) {}
+if (wantMic) {
+  const resume = e => {
+    removeEventListener("pointerdown", resume); removeEventListener("keydown", resume);
+    if (!micOn && e.target.id !== "mic") micStart();
+  };
+  addEventListener("pointerdown", resume); addEventListener("keydown", resume);
+}
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+rest();
+line("MAGI", 'Hi, I am MAGI, the second brain of Magppie Kitchens. You can ask me anything about us. I am always here for you. Press the space bar or click the brain to switch my microphone on, then say "wake up time".', "magi");
+
+addEventListener("resize", resize);
+resize(); layout(); requestAnimationFrame(frame);
+load().catch(() => toast("MAGI is not reachable. Open http://localhost:8000 in Chrome.")).finally(() => setTimeout(() => $("boot").classList.add("off"), still ? 0 : 700));
+setInterval(() => { if (document.visibilityState === "visible") load().catch(() => {}); }, 20000);
+
+// ---------------- A new AI key, typed here when the free one runs out ----------------
+async function keyState() {
+  try {
+    const g = (await (await fetch("/api/keys")).json()).gemini, b = $("keybtn");
+    b.classList.toggle("warn", g.resting || !g.saved);
+    b.textContent = !g.saved ? "ADD A GEMINI KEY" : g.resting ? "GEMINI IS USED UP · ADD A KEY" : "AI KEY";
+  } catch (e) { /* the button stays as it is */ }
+}
+$("keybtn").addEventListener("click", () => { $("keybox").hidden = !$("keybox").hidden; if (!$("keybox").hidden) $("keyval").focus(); });
+$("keyclose").addEventListener("click", () => { $("keybox").hidden = true; $("keyval").value = ""; });
+$("keybox").addEventListener("submit", async e => {
+  e.preventDefault();
+  const value = $("keyval").value.trim();
+  if (!value) return;
+  $("keynote").textContent = "Checking the key with Google…";
+  const r = await fetch("/api/keys/gemini", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({value})});
+  const d = await r.json().catch(() => ({}));
+  $("keyval").value = "";
+  if (!r.ok) { $("keynote").textContent = d.detail || "The key could not be saved."; return; }
+  $("keynote").textContent = "Saved. MAGI is using the new key now.";
+  setTimeout(() => { $("keybox").hidden = true; }, 1800);
+  keyState();
+});
+keyState(); setInterval(keyState, 60000);
+</script>
+</body>
+</html>

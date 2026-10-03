@@ -1,0 +1,22 @@
+# Public web address for the dashboard (HTTPS + login). Add-on service.
+# Start:  sudo docker compose -f docker-compose.yml -f docker-compose.public.yml up -d --no-deps web
+# Stop:   sudo docker compose -f docker-compose.yml -f docker-compose.public.yml stop web
+# Needs PUBLIC_HOST and DASHBOARD_PASSWORD in .env, and ports 80 and 443 opened in the Oracle network rules.
+
+services:
+  web:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      - PUBLIC_HOST=${PUBLIC_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./services/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

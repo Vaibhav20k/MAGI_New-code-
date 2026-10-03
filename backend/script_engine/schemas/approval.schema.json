@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Approval",
+  "type": "object",
+  "required": [
+    "approval_id",
+    "run_id",
+    "script_id",
+    "script_version",
+    "decision",
+    "decided_by",
+    "decided_at",
+    "status",
+    "script_hash"
+  ],
+  "properties": {
+    "approval_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "script_id": { "type": "string" },
+    "script_version": { "type": "integer" },
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "REQUEST_CHANGES"]
+    },
+    "decided_by": { "type": "string" },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "feedback_comments": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["SCRIPT_LOCKED", "REVISION_REQUESTED"]
+    },
+    "script_hash": { "type": "string" }
+  },
+  "additionalProperties": false
+}

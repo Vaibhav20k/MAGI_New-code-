@@ -1,0 +1,35 @@
+# MAI — Hermes Agent configuration (copied into the agent's data folder at start)
+#
+# The work is split so no single free allowance carries everything:
+#   MAI chat and voice  -> Gemini "lite" models (quick answers; about 500 requests a day each)
+#   ideas, blogs, creatives (the backend) -> Token Harbor (see backend/app/llm.py)
+# If Gemini runs out for the day, MAI falls back to Token Harbor (slower, but it keeps answering).
+
+providers:
+  tokenharbor:
+    base_url: https://tokenharbor.ai/v1
+    key_env: TOKENHARBOR_API_KEY
+
+model:
+  provider: gemini
+  default: gemini-3.1-flash-lite-preview
+  base_url: https://generativelanguage.googleapis.com/v1beta
+
+fallback_providers:
+  - provider: gemini
+    model: gemini-flash-lite-latest
+  - provider: tokenharbor
+    model: "qwen3.8-flash:free"
+  - provider: tokenharbor
+    model: "deepseek-v4.1-flash:free"
+  - provider: openrouter
+    model: nvidia/nemotron-3-super-120b-a12b:free
+
+timezone: "Asia/Kolkata"
+
+mcp_servers:
+  marketing:
+    url: "http://backend:8000/mcp/"
+    headers:
+      Authorization: "Bearer ${MCP_TOKEN}"
+    timeout: 300

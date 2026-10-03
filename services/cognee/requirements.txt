@@ -1,0 +1,4 @@
+# Cognee AI memory engine (Postgres relational store + pgvector; embedded "ladybug" graph DB; fastembed is a core dep)
+cognee[postgres-binary]==1.6.2
+fastapi
+uvicorn

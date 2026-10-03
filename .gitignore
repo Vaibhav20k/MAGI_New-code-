@@ -1,0 +1,25 @@
+# keys and anything saved by the running system
+.env
+.env.*
+!.env.example
+*.pem
+data/
+
+# team-only knowledge and the live server's details stay off GitHub
+inputs/company-kb-internal.md
+SERVER.local.md
+
+# rendered media
+*.mp4
+*.mov
+*.wav
+*.mp3
+
+# tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.claude/
+supabase/.temp/

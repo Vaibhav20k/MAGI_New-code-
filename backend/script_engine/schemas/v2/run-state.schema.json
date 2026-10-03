@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunState",
+  "type": "object",
+  "required": [
+    "run_id",
+    "request_id",
+    "current_state",
+    "revision_count",
+    "max_revisions_allowed",
+    "created_at",
+    "updated_at",
+    "artifacts"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "current_state": {
+      "type": "string",
+      "enum": [
+        "CONTENT_REQUEST",
+        "RESEARCHING",
+        "RESEARCH_READY",
+        "MASTER_DRAFTING",
+        "MASTER_DRAFT_READY",
+        "DIVERSITY_CHECK",
+        "EDITOR_REVIEWING",
+        "SCRIPT_READY_FOR_APPROVAL",
+        "HUMAN_APPROVAL_REQUIRED",
+        "MASTER_DRAFT_REVISION",
+        "SCRIPT_LOCKED",
+        "MVP_COMPLETE",
+        "FAILED"
+      ]
+    },
+    "revision_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_revisions_allowed": {
+      "type": "integer",
+      "default": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "request_path": {
+          "type": "string"
+        },
+        "research_dossier_path": {
+          "type": "string"
+        },
+        "research_report_path": {
+          "type": "string"
+        },
+        "master_draft_path": {
+          "type": "string"
+        },
+        "editorial_review_path": {
+          "type": "string"
+        },
+        "final_script_path": {
+          "type": "string"
+        },
+        "approval_path": {
+          "type": "string"
+        },
+        "locked_script_path": {
+          "type": "string"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "total_latency_seconds": {
+          "type": "number"
+        },
+        "total_tokens_estimated": {
+          "type": "integer"
+        },
+        "model_used": {
+          "type": "string"
+        }
+      }
+    },
+    "diversity": {
+      "type": "object",
+      "description": "Verdict from workflows/diversity_gate.py for this run's accepted hook.",
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "COLLISION",
+            "PASS_AFTER_RETRY"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "matched_run_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "similarity": {
+          "type": "number"
+        },
+        "angle_family": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opening_form": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "regenerated": {
+          "type": "boolean"
+        },
+        "content_similarity": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

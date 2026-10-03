@@ -1,0 +1,372 @@
+<title>Marketing MAI Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single dark HUD — mission header, full-width schematic, then agent dossiers, glossary, timeline and stack as instrument panels */
+:root{
+  --bg:#060A12; --panel:#0B1322; --panel2:#0F1A2E; --line:#1C2B45; --fg:#DCE7F5; --muted:#8495B0;
+  --cyan:#46D6FF; --mint:#4FE3B0; --amber:#FFB44D; --lilac:#B8A4FF; --pink:#FF6FA8; --wire:#3A6E96;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:48px 48px;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,transparent 0%,var(--bg) 70%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:36px 64px;display:flex;flex-direction:column;gap:48px}
+.k{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+h1,h2{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(30px,5vw,50px);line-height:1.05}
+h2{font-size:22px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:10px;height:10px;border:1.5px solid var(--cyan);transform:rotate(45deg);flex:none}
+.hero{display:flex;flex-direction:column;gap:16px}
+.hero p,.lead{margin:0;max-width:66ch;color:var(--muted)}
+.verdict{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;border:1px solid var(--mint);color:var(--mint);font:500 13px var(--mono);letter-spacing:.14em;padding:8px 14px;border-radius:4px;background:color-mix(in srgb,var(--mint) 8%,transparent)}
+.verdict i{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint);animation:pulse 1.6s ease-in-out infinite}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.stats div{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stats b{font:600 26px var(--display);color:var(--cyan);font-variant-numeric:tabular-nums}
+.stats span{font-size:13px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font:500 12px var(--mono);color:var(--muted);letter-spacing:.08em}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:14px;height:14px;border-radius:3px;border:1.5px solid currentColor;background:color-mix(in srgb,currentColor 18%,transparent)}
+.legend .fbk i{border:none;background:none;border-top:2px dashed var(--pink);height:0;width:22px;border-radius:0}
+.legend .srvk i{background:none;border:1.5px dotted var(--fg)}
+.frame{border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--panel) 70%,transparent);padding:14px;position:relative}
+.frame::before,.frame::after{content:"";position:absolute;width:18px;height:18px;border:2px solid var(--cyan)}
+.frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none;border-radius:8px 0 0 0}
+.frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-radius:0 0 8px 0}
+.scroll{overflow-x:auto}
+svg.arch{display:block;width:100%;min-width:760px;height:auto}
+.n .b{fill:var(--panel2);stroke:var(--c);stroke-width:1.2;stroke-opacity:.7}
+.n .tag{fill:var(--c)}
+.n .nk{font:500 10.5px var(--mono);fill:var(--c);letter-spacing:.14em}
+.n .nt{font:600 16px var(--display);fill:var(--fg)}
+.n .ns{font:400 12.5px var(--body);fill:var(--muted)}
+.n{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--c) 28%,transparent))}
+.ag{--c:var(--cyan)}.dt{--c:var(--mint)}.ex{--c:var(--amber)}.hu{--c:var(--lilac)}
+.lane{fill:color-mix(in srgb,var(--cyan) 3%,transparent);stroke:var(--wire);stroke-width:1;stroke-dasharray:5 6}
+.srv{fill:none;stroke:var(--fg);stroke-opacity:.5;stroke-width:1.2;stroke-dasharray:2 5}
+.srvl{font:500 11px var(--mono);fill:var(--fg);letter-spacing:.16em}
+.lbl{font:500 11px var(--mono);fill:var(--cyan);letter-spacing:.16em}
+.lbl2{font:500 11px var(--mono);fill:var(--muted);letter-spacing:.16em}
+.w{stroke:var(--wire);stroke-width:1.5;fill:none;stroke-dasharray:6 5;animation:flow 1.1s linear infinite}
+.fb{stroke:var(--pink);stroke-width:1.5;fill:none;stroke-dasharray:4 5;animation:flow 1.6s linear infinite}
+.ah{fill:var(--wire)}.ahp{fill:var(--pink)}
+.note{font-size:13px;color:var(--muted);margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.agents{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px}
+.ac{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.ac header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ac .id{font:500 11px var(--mono);color:var(--cyan);letter-spacing:.14em}
+.ac h3{margin:2px 0 0;font:600 20px var(--display)}
+.ac .nick{font-size:13px;color:var(--muted)}
+.ac .what{margin:0;font-size:14.5px}
+.io{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px;margin:0}
+.io dt{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--muted);padding-top:3px}
+.io dd{margin:0;color:var(--fg);min-width:0}
+.ex1{font-size:13.5px;color:var(--muted);border-left:2px solid var(--wire);padding-left:10px;margin:0;border-radius:0}
+.ex1 b{color:var(--fg);font-weight:500}
+.when{font:500 10.5px var(--mono);letter-spacing:.08em;padding:3px 8px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
+.when.night{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 50%,transparent)}
+.when.day{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 50%,transparent)}
+.when.fin{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 50%,transparent)}
+.when.on{color:var(--lilac);border-color:color-mix(in srgb,var(--lilac) 50%,transparent)}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.g{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.g h3{margin:0;font:600 16px var(--display);display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.g h3 span{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.g p{margin:0;color:var(--muted);font-size:14px}
+.g p b{color:var(--fg);font-weight:500}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px}
+.chip{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:14px}
+.chip b{font:500 11px var(--mono);letter-spacing:.1em;padding:2px 7px;border-radius:3px;flex:none;margin-top:2px}
+.yes b{color:var(--mint);border:1px solid var(--mint)}
+.part b{color:var(--amber);border:1px solid var(--amber)}
+.wait b{color:var(--lilac);border:1px solid var(--lilac)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14px}
+th{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;background:var(--panel2);padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--panel)}
+tr:last-child td{border-bottom:none}
+td.nm{font-family:var(--display);font-weight:600;font-size:15px;white-space:nowrap}
+.alt{color:var(--muted)}
+.tl{display:flex;flex-direction:column;border-left:1.5px solid var(--wire);margin-left:8px}
+.st{position:relative;padding:0 0 22px 26px;display:flex;flex-direction:column;gap:4px}
+.st::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;background:var(--bg);border:1.5px solid var(--cyan);transform:rotate(45deg)}
+.st .tm{font:500 12px var(--mono);color:var(--cyan);letter-spacing:.1em}
+.st h3{margin:0;font:600 17px var(--display)}
+.st p{margin:0;color:var(--muted);max-width:70ch}
+.st.you::before{border-color:var(--lilac)} .st.you .tm{color:var(--lilac)}
+@keyframes flow{to{stroke-dashoffset:-22}}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.w,.fb,.verdict i{animation:none}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="k">Magppie · marketing intelligence · system blueprint v2 · 1 Oct 2026</div>
+  <h1>Marketing MAI</h1>
+  <p>It crawls the web from 8 pm to 8 am, learns into your company knowledge base, then turns what's trending into Magppie ideas. When you press Finalise, you get blogs, creatives and videos on one dashboard.</p>
+  <div class="verdict"><i></i>BUILDABLE · YES</div>
+  <div class="stats">
+    <div><b>11</b><span>AI agents</span></div>
+    <div><b>12 h</b><span>Nightly crawl, 8 pm – 8 am</span></div>
+    <div><b>2·2·2</b><span>Blog, creative, script ideas per press</span></div>
+    <div><b>₹0</b><span>Free AI brains, server on trial credit</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>Build status · 1 October</h2>
+  <div class="chips">
+    <div class="chip yes"><b>LIVE</b>Oracle server in Mumbai, running 24/7</div>
+    <div class="chip yes"><b>LIVE</b>Database with all 15 tables</div>
+    <div class="chip yes"><b>LIVE</b>SearXNG search engine (test search returned real results)</div>
+    <div class="chip yes"><b>LIVE</b>Crawl4AI page reader</div>
+    <div class="chip yes"><b>LIVE</b>AI brains tested: Groq, Gemini, OpenRouter</div>
+    <div class="chip yes"><b>LIVE</b>Apify token for social media</div>
+    <div class="chip part"><b>BUILDING</b>Night-cycle agents: Discovery, Crawler, Filter written; Knowledge next</div>
+    <div class="chip part"><b>BUILDING</b>Ideas, blog, creative and video agents</div>
+    <div class="chip part"><b>BUILDING</b>Dashboard and MAI (Hermes)</div>
+    <div class="chip wait"><b>WAITING</b>Company KB file (11,000 lines)</div>
+    <div class="chip wait"><b>WAITING</b>Seed links: websites, YouTube, Instagram, Pinterest, Facebook</div>
+    <div class="chip wait"><b>WAITING</b>The two existing tools (zips) and the 90 script ideas</div>
+  </div>
+</section>
+
+<section>
+  <h2>Architecture</h2>
+  <div class="legend">
+    <span style="color:var(--cyan)"><i></i>AI agent</span>
+    <span style="color:var(--mint)"><i></i>Data and knowledge</span>
+    <span style="color:var(--amber)"><i></i>Outside source or service</span>
+    <span style="color:var(--lilac)"><i></i>You and your screen</span>
+    <span class="fbk" style="color:var(--pink)"><i></i>Agent 11 · feedback loop, phase 2</span>
+    <span class="srvk" style="color:var(--fg)"><i></i>Runs on the Oracle server</span>
+  </div>
+  <div class="frame"><div class="scroll">
+<svg class="arch" viewBox="0 0 1100 1450" role="img" aria-labelledby="archT archD">
+<title id="archT">Marketing MAI architecture</title>
+<desc id="archD">You talk to the Mission Control dashboard, which drives MAI, the orchestrator built on Hermes Agent. Inputs and sources feed a night cycle on the Oracle server: discovery, crawler, filter and knowledge agents learn into the company knowledge base, while doubtful facts wait for the manager's 6 pm review. Pressing Crawl runs the adapt and strategist agents to produce six ideas. Finalise runs the blog writer, creative and video agents; images and videos are made through Higgsfield, stored in the database on the server and shown on the dashboard. Every agent thinks with a layered set of free AI brains: Groq, Gemini and OpenRouter. A feedback loop returns results to the knowledge base.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M1 1L9 5L1 9z"/></marker>
+<marker id="ahp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M1 1L9 5L1 9z"/></marker>
+</defs>
+
+<text class="lbl2" x="40" y="30">// CONTROL</text>
+<g class="n hu" transform="translate(40 40)"><rect class="b" width="240" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">YOU</text><text class="nt" x="14" y="43">Operator</text><text class="ns" x="14" y="61">Voice · text · any device</text></g>
+<path class="w" d="M280 76H326" marker-end="url(#ah)"/>
+<g class="n hu" transform="translate(330 40)"><rect class="b" width="270" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">YOUR SCREEN</text><text class="nt" x="14" y="43">Mission Control</text><text class="ns" x="14" y="61">Talk, click, see everything</text></g>
+<path class="w" d="M600 76H646" marker-end="url(#ah)"/>
+<g class="n ag" transform="translate(650 40)"><rect class="b" width="410" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 01 · HERMES AGENT · ON ORACLE</text><text class="nt" x="14" y="43">MAI</text><text class="ns" x="14" y="61">Coordinator: hears you, gives each agent its job</text></g>
+
+<text class="lbl2" x="40" y="148">// INPUTS · LOADED ONCE, UPDATED ANY TIME</text>
+<g class="n dt" transform="translate(40 158)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">INPUT</text><text class="nt" x="14" y="43">Company KB</text><text class="ns" x="14" y="61">11,000 lines · .md</text></g>
+<g class="n dt" transform="translate(301 158)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">INPUT</text><text class="nt" x="14" y="43">Crawler rules</text><text class="ns" x="14" y="61">Where to look, what to skip</text></g>
+<g class="n dt" transform="translate(562 158)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">INPUT</text><text class="nt" x="14" y="43">Script bank</text><text class="ns" x="14" y="61">90 script ideas</text></g>
+<g class="n dt" transform="translate(823 158)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">INPUT</text><text class="nt" x="14" y="43">Seed sites</text><text class="ns" x="14" y="61">Web · YouTube · social</text></g>
+<path class="w" d="M550 232V264" marker-end="url(#ah)"/>
+
+<text class="lbl2" x="40" y="282">// SOURCES</text>
+<g class="n ex" transform="translate(40 292)"><rect class="b" width="188" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">SOURCE</text><text class="nt" x="14" y="43">Websites, blogs</text><text class="ns" x="14" y="61">Read with Crawl4AI</text></g>
+<g class="n ex" transform="translate(248 292)"><rect class="b" width="188" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">SOURCE</text><text class="nt" x="14" y="43">YouTube, Shorts</text><text class="ns" x="14" y="61">Free, no key needed</text></g>
+<g class="n ex" transform="translate(456 292)"><rect class="b" width="188" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">SOURCE</text><text class="nt" x="14" y="43">Instagram</text><text class="ns" x="14" y="61">Apify token</text></g>
+<g class="n ex" transform="translate(664 292)"><rect class="b" width="188" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">SOURCE</text><text class="nt" x="14" y="43">Pinterest, FB</text><text class="ns" x="14" y="61">Feeds + Apify token</text></g>
+<g class="n ex" transform="translate(872 292)"><rect class="b" width="188" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">SOURCE</text><text class="nt" x="14" y="43">LinkedIn</text><text class="ns" x="14" y="61">Apify, or pasted links</text></g>
+<path class="w" d="M550 364V446" marker-end="url(#ah)"/>
+
+<rect class="srv" x="8" y="384" width="1086" height="628" rx="10"/>
+<text class="srvl" x="24" y="402">ORACLE CLOUD SERVER · MUMBAI · LIVE · RUNS 24/7 · YOUR MAC CAN BE OFF</text>
+
+<rect class="lane" x="26" y="412" width="1048" height="140" rx="8"/>
+<text class="lbl" x="40" y="434">NIGHT CYCLE · 8 PM → 8 AM · AUTOMATIC</text>
+<g class="n ag" transform="translate(40 448)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 02 · SEARXNG</text><text class="nt" x="14" y="43">Discovery</text><text class="ns" x="14" y="61">Finds new similar sites</text></g>
+<path class="w" d="M277 484H298" marker-end="url(#ah)"/>
+<g class="n ag" transform="translate(301 448)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 03 · CRAWL4AI</text><text class="nt" x="14" y="43">Crawler</text><text class="ns" x="14" y="61">Reads pages into plain text</text></g>
+<path class="w" d="M538 484H559" marker-end="url(#ah)"/>
+<g class="n ag" transform="translate(562 448)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 04 · EMBEDDINGS</text><text class="nt" x="14" y="43">Filter</text><text class="ns" x="14" y="61">Throws away off-topic pages</text></g>
+<path class="w" d="M799 484H820" marker-end="url(#ah)"/>
+<g class="n ag" transform="translate(823 448)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 05 · COGNEE</text><text class="nt" x="14" y="43">Knowledge</text><text class="ns" x="14" y="61">Saves new learnings to KB</text></g>
+<path class="w" d="M941 520V593" marker-end="url(#ah)"/>
+
+<g class="n hu" transform="translate(40 596)"><rect class="b" width="237" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">MANAGER · 6 PM DAILY</text><text class="nt" x="14" y="43">Approval review</text><text class="ns" x="14" y="61">Chrome alert + dashboard</text></g>
+<path class="w" d="M280 632H298" marker-start="url(#ah)" marker-end="url(#ah)"/>
+<g class="n dt" transform="translate(301 596)"><rect class="b" width="759" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">DATA · THE KNOWLEDGE · POSTGRES + PGVECTOR ON THE SERVER</text><text class="nt" x="14" y="43">Company knowledge base</text><text class="ns" x="14" y="61">Your 11k lines + 90 scripts + everything learned each night</text></g>
+<path class="w" d="M348 668V731" marker-end="url(#ah)"/>
+
+<rect class="lane" x="26" y="700" width="1048" height="140" rx="8"/>
+<text class="lbl" x="40" y="722" style="fill:var(--amber)">DAY · YOU PRESS CRAWL · ~3–5 MIN</text>
+<g class="n ag" transform="translate(40 734)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 06 · GPT RESEARCHER</text><text class="nt" x="14" y="43">Adapt</text><text class="ns" x="14" y="61">Turns trends into Magppie ideas</text></g>
+<path class="w" d="M360 770H387" marker-end="url(#ah)"/>
+<g class="n ag" transform="translate(390 734)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 07 · THE PICKER</text><text class="nt" x="14" y="43">Strategist</text><text class="ns" x="14" y="61">Chooses the best 2 + 2 + 2 ideas</text></g>
+<path class="w" d="M713 770H737" marker-start="url(#ah)" marker-end="url(#ah)"/>
+<g class="n hu" transform="translate(740 734)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">YOU</text><text class="nt" x="14" y="43">Pick or re-crawl</text><text class="ns" x="14" y="61">Keep ideas, or press Crawl again</text></g>
+<path class="w" d="M550 806V857" marker-end="url(#ah)"/>
+
+<rect class="lane" x="26" y="860" width="1048" height="140" rx="8"/>
+<text class="lbl" x="40" y="882" style="fill:var(--mint)">YOU PRESS FINALISE · ~15–35 MIN</text>
+<g class="n ag" transform="translate(40 894)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 08 · GPT RESEARCHER</text><text class="nt" x="14" y="43">Blog writer</text><text class="ns" x="14" y="61">Writes the 2 full blogs</text></g>
+<g class="n ag" transform="translate(390 894)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 09 · YOUR IMAGE-IDEA AI</text><text class="nt" x="14" y="43">Creative</text><text class="ns" x="14" y="61">Writes image ideas, orders images</text></g>
+<g class="n ag" transform="translate(740 894)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">AGENT 10 · YOUR SCRIPT AI</text><text class="nt" x="14" y="43">Video</text><text class="ns" x="14" y="61">Writes scripts, orders videos</text></g>
+<path class="w" d="M550 966V1025" marker-end="url(#ah)"/>
+<path class="w" d="M900 966V1025" marker-end="url(#ah)"/>
+<path class="w" d="M200 966V1133" marker-end="url(#ah)"/>
+
+<g class="n ex" transform="translate(390 1028)"><rect class="b" width="670" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">OUTSIDE SERVICE · MEDIA ENGINE</text><text class="nt" x="14" y="43">Higgsfield (via MCP)</text><text class="ns" x="14" y="61">Makes the images and videos with your premium credits · one login</text></g>
+<path class="w" d="M725 1100V1133" marker-end="url(#ah)"/>
+
+<g class="n dt" transform="translate(40 1136)"><rect class="b" width="1020" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">DATA · ON THE SERVER</text><text class="nt" x="14" y="43">Content database</text><text class="ns" x="14" y="61">Stores every idea, blog, creative and video, so nothing repeats or gets lost</text></g>
+<path class="w" d="M550 1208V1241" marker-end="url(#ah)"/>
+
+<g class="n hu" transform="translate(40 1244)"><rect class="b" width="1020" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">YOU · ONE SCREEN</text><text class="nt" x="14" y="43">Mission Control dashboard</text><text class="ns" x="14" y="61">Watch · approve · download · regenerate · crawler stats · knowledge growth</text></g>
+
+<path class="fb" d="M1060 1280H1082V632H1063" marker-end="url(#ahp)"/>
+
+<text class="lbl2" x="40" y="1352">// AI BRAINS · EVERY AGENT THINKS WITH THESE · TRIED IN ORDER, ALL FREE</text>
+<g class="n ex" transform="translate(40 1362)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">BRAIN 1 · FAST</text><text class="nt" x="14" y="43">Groq</text><text class="ns" x="14" y="61">Tagging, extracting, quick replies</text></g>
+<g class="n ex" transform="translate(390 1362)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">BRAIN 2 · CAREFUL</text><text class="nt" x="14" y="43">Google Gemini</text><text class="ns" x="14" y="61">Blogs, adapting ideas, long reading</text></g>
+<g class="n ex" transform="translate(740 1362)"><rect class="b" width="320" height="72" rx="6"/><rect class="tag" x="14" width="34" height="3"/><text class="nk" x="14" y="21">BRAIN 3 · OVERFLOW</text><text class="nt" x="14" y="43">OpenRouter</text><text class="ns" x="14" y="61">Steps in when the others hit a limit</text></g>
+</svg>
+  </div></div>
+  <p class="note">The dotted outline is the Oracle server, where MAI and all 11 agents run. The database also lives on that server. Higgsfield (images and video), Apify (social media) and the AI brains are outside services it talks to. Your Mac is only where the system gets built.</p>
+</section>
+
+<section>
+  <h2>Every agent, explained</h2>
+  <p class="lead">Think of it as a small marketing team where each member has one job. MAI is the coordinator; the other ten do the work, one after another. Your marketing manager has the final say on anything doubtful.</p>
+  <div class="agents">
+
+    <article class="ac"><header><div><div class="id">AGENT 01 · HERMES AGENT</div><h3>MAI</h3><div class="nick">The coordinator</div></div><span class="when on">ALWAYS ON</span></header>
+      <p class="what">Listens to you, by voice or text, and decides which agent does what. It starts the crawl at 8 pm, stops it at 8 am, sends the manager's approval request at 6 pm, and remembers how you like things done.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Your voice or clicks, the schedule</dd><dt>GIVES</dt><dd>Jobs to every other agent, spoken or written replies to you</dd></dl>
+      <p class="ex1">You say <b>"Hey MAI, give me new ideas"</b>. MAI wakes agents 06 and 07 and reads the 6 ideas back to you.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 02 · SEARXNG</div><h3>Discovery</h3><div class="nick">The scout</div></div><span class="when night">NIGHT</span></header>
+      <p class="what">Finds new websites and channels similar to the ones you gave it. It follows links from good sites and searches for topics from your KB.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Your seed sites, crawler rules, KB topics</dd><dt>GIVES</dt><dd>A growing list of new sites worth reading</dd></dl>
+      <p class="ex1">A kitchen design blog links to an interiors magazine. Discovery <b>adds the magazine to tonight's list</b>.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 03 · CRAWL4AI + APIS</div><h3>Crawler</h3><div class="nick">The reader</div></div><span class="when night">NIGHT</span></header>
+      <p class="what">Visits every site on the list and reads the pages, posts and videos. It turns each one into plain text, without menus, ads or clutter. It reads politely, following each site's rules.</p>
+      <dl class="io"><dt>TAKES</dt><dd>The site list from Discovery</dd><dt>GIVES</dt><dd>Thousands of pages as clean text, plus YouTube titles, views and transcripts</dd></dl>
+      <p class="ex1">Reads a competitor's new blog post and <b>a Short with 2 million views</b> on the same topic.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 04 · LOCAL EMBEDDINGS</div><h3>Filter</h3><div class="nick">The gatekeeper</div></div><span class="when night">NIGHT</span></header>
+      <p class="what">Checks each page: is this about our world? It compares the page's meaning with your KB. Related pages pass; unrelated ones are thrown away, and their links are not followed, so the crawl doesn't wander off.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Every page the Crawler read</dd><dt>GIVES</dt><dd>Only the relevant pages, roughly 1 in 10</dd></dl>
+      <p class="ex1">A page on modular kitchens: <b>kept</b>. A page on cricket scores: <b>dropped</b>.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 05 · COGNEE</div><h3>Knowledge</h3><div class="nick">The librarian</div></div><span class="when night">NIGHT</span></header>
+      <p class="what">Pulls the useful facts out of the relevant pages and files them in the KB. It skips what's already there, notes how sure it is, and retires old facts. Anything doubtful goes to a holding area, where no agent can use it until the manager approves it.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Relevant pages from the Filter</dd><dt>GIVES</dt><dd>Safe learnings in the KB, doubtful ones in the holding area</dd></dl>
+      <p class="ex1">Learns <b>"before-and-after kitchen reels are trending this month"</b>. That's safe, so it's saved. "Competitor cut prices 30%" is doubtful, so it waits for the 6 pm review.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 06 · GPT RESEARCHER</div><h3>Adapt</h3><div class="nick">The translator</div></div><span class="when day">PRESS CRAWL</span></header>
+      <p class="what">Takes what's working out there and rewrites it as a Magppie idea, using your products, story and goals from the KB and the style of your 90 scripts.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Fresh trends from the KB, your company knowledge</dd><dt>GIVES</dt><dd>20–40 candidate ideas shaped to Magppie</dd></dl>
+      <p class="ex1">Trend: "5 kitchen mistakes" reels. Adapted: <b>"5 kitchen mistakes Magppie's design team fixes every week"</b>.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 07 · THE PICKER</div><h3>Strategist</h3><div class="nick">The editor</div></div><span class="when day">PRESS CRAWL</span></header>
+      <p class="what">Scores every candidate idea: does it fit Magppie, is it trending, is it new? It picks the best 2 blog, 2 creative and 2 script ideas, and never repeats ideas you've already seen.</p>
+      <dl class="io"><dt>TAKES</dt><dd>The 20–40 ideas from Adapt, your idea history</dd><dt>GIVES</dt><dd>6 ideas on your dashboard</dd></dl>
+      <p class="ex1">Press Crawl again and it <b>picks a different 6</b>, skipping the ones you've already seen.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 08 · GPT RESEARCHER</div><h3>Blog writer</h3><div class="nick">The writer</div></div><span class="when fin">FINALISE</span></header>
+      <p class="what">Turns the 2 chosen blog ideas into full, SEO-ready blogs, with facts from your KB and sources for anything it claims.</p>
+      <dl class="io"><dt>TAKES</dt><dd>2 approved blog ideas, the KB</dd><dt>GIVES</dt><dd>2 complete blogs, ready to edit or publish</dd></dl>
+      <p class="ex1">About 3–5 minutes for both.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 09 · YOUR IMAGE-IDEA AI + HIGGSFIELD</div><h3>Creative</h3><div class="nick">The art director</div></div><span class="when fin">FINALISE</span></header>
+      <p class="what">Uses the image-idea tool your team already built to turn each creative idea into an image concept and brief, then asks Higgsfield to generate the images.</p>
+      <dl class="io"><dt>TAKES</dt><dd>2 approved creative ideas, brand rules from the KB</dd><dt>GIVES</dt><dd>2 briefs and 2 finished creatives on the dashboard</dd></dl>
+      <p class="ex1">Uses your Higgsfield premium credits. The dashboard shows the cost before you press Finalise.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 10 · YOUR SCRIPT AI</div><h3>Video</h3><div class="nick">The director</div></div><span class="when fin">FINALISE</span></header>
+      <p class="what">Uses the video-script tool your team already built to write each script, splits it into scenes, and asks Higgsfield to make the video.</p>
+      <dl class="io"><dt>TAKES</dt><dd>2 approved script ideas, your script AI</dd><dt>GIVES</dt><dd>2 scripts and 2 finished videos on the dashboard</dd></dl>
+      <p class="ex1">About 10–30 minutes, depending on Higgsfield's queue.</p></article>
+
+    <article class="ac"><header><div><div class="id">AGENT 11 · WINDSOR.AI</div><h3>Feedback</h3><div class="nick">The analyst</div></div><span class="when">PHASE 2</span></header>
+      <p class="what">After content goes live, it checks how it performed (views, clicks, ads, leads) and teaches the KB what works, so future ideas get better.</p>
+      <dl class="io"><dt>TAKES</dt><dd>Your Instagram, YouTube, ads and CRM results</dd><dt>GIVES</dt><dd>"What worked" learnings back into the KB</dd></dl>
+      <p class="ex1">Learns that <b>before-and-after reels get 3× more saves</b>, so the Strategist favours them.</p></article>
+
+  </div>
+</section>
+
+<section>
+  <h2>In simple words</h2>
+  <div class="gl">
+    <div class="g"><h3>Oracle server <span>WHERE IT RUNS</span></h3><p>A computer in Oracle's Mumbai data centre that never switches off. It is live now, paid for by Oracle's free trial credit for the first month. <b>MAI and all 11 agents live there</b>, so the crawl runs at night while your Mac is off.</p></div>
+    <div class="g"><h3>Approval review <span>MANAGER · 6 PM</span></h3><p>Doubtful learnings, like a competitor's price or a fact that contradicts your KB, sit in a holding area and are <b>never used until approved</b>. Every day at 6 pm the manager gets a Chrome notification and a dashboard alert, then approves, rejects, edits or adds knowledge and presses <b>Finalise review</b>. Rejected items are remembered so they're never asked again. Obvious, safe learnings are saved automatically.</p></div>
+    <div class="g"><h3>Local embeddings <span>MEANING FINGERPRINT</span></h3><p>A small free AI that turns each page into a "meaning fingerprint" and compares it with your KB's. Close match: keep. Far off: drop. <b>"Local" means it runs on the Oracle server itself</b>, so it's free and unlimited.</p></div>
+    <div class="g"><h3>APIs and Apify <span>HOW IT READS SOCIAL MEDIA</span></h3><p>An API is an official way for software to read a platform's data within its rules. YouTube and Pinterest are read free with no key. <b>Apify</b> reads public Instagram, Facebook and LinkedIn posts for us on its free monthly credit, checked once a night for new posts.</p></div>
+    <div class="g"><h3>Cognee <span>THE LEARNING ENGINE</span></h3><p>Free software behind the Knowledge agent. It pulls facts out of pages, links them to what's already in your KB (products, competitors, trends), removes duplicates and retires old facts. <b>It's what makes the KB smarter each night</b> instead of just piling up pages.</p></div>
+    <div class="g"><h3>SearXNG <span>OUR OWN SEARCH ENGINE</span></h3><p>A free search engine we run on the Oracle server. It searches Google, Bing and others for us, with no fees or limits. <b>Discovery uses it to find new sites.</b></p></div>
+    <div class="g"><h3>Crawl4AI <span>THE PAGE READER</span></h3><p>Free software that opens a web page like a browser does and turns it into clean text an AI can read.</p></div>
+    <div class="g"><h3>Hermes Agent <span>MAI'S BRAIN</span></h3><p>Free agent software from Nous Research. It handles voice, gives out jobs, runs the schedule and keeps its own memory of how you work.</p></div>
+    <div class="g"><h3>GPT Researcher <span>RESEARCH + WRITING</span></h3><p>Free software that reads your KB and web sources together and writes long, sourced text. It powers the Adapt agent and the Blog writer.</p></div>
+    <div class="g"><h3>Database <span>POSTGRES + PGVECTOR</span></h3><p>A free database running on the server, the same engine Supabase is built on. It stores the knowledge base plus every idea, blog, creative and video.</p></div>
+    <div class="g"><h3>Higgsfield MCP <span>CONNECTOR</span></h3><p>A connector that lets our server ask your Higgsfield account to make images and videos. You log in once; after that it works on its own.</p></div>
+    <div class="g"><h3>RAG <span>HOW IT THINKS</span></h3><p>Before writing, the AI looks up the relevant parts of your KB and writes only from those, so every idea stays true to Magppie.</p></div>
+    <div class="g"><h3>Layered AI brains <span>GROQ · GEMINI · OPENROUTER</span></h3><p>Three free AI services used together. Quick jobs go to <b>Groq</b> first, careful writing goes to <b>Gemini</b> first, and <b>OpenRouter</b> is the overflow. If one hits its free limit, MAI switches to the next automatically.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Can we build it?</h2>
+  <div class="chips">
+    <div class="chip yes"><b>YES</b>Self-learning company KB (11,000 lines)</div>
+    <div class="chip yes"><b>YES</b>12-hour nightly crawler that finds new sites</div>
+    <div class="chip yes"><b>YES</b>Websites, blogs, YouTube and Shorts, free</div>
+    <div class="chip yes"><b>YES</b>Instagram, Pinterest, Facebook, free with limits (Apify)</div>
+    <div class="chip part"><b>PARTIAL</b>LinkedIn: Apify free credit or pasted links; heavy use paid later</div>
+    <div class="chip yes"><b>YES</b>Ideas rewritten for Magppie from your KB</div>
+    <div class="chip yes"><b>YES</b>Crawl button → 2 blog, 2 creative, 2 script ideas</div>
+    <div class="chip yes"><b>YES</b>Full blogs after Finalise</div>
+    <div class="chip yes"><b>YES</b>Creatives and videos via Higgsfield, no separate API</div>
+    <div class="chip yes"><b>YES</b>Your two existing tools plugged in as agents 09 and 10</div>
+    <div class="chip yes"><b>YES</b>MAI voice control on one dashboard</div>
+    <div class="chip yes"><b>YES</b>Manager approval at 6 pm by Chrome notification and dashboard</div>
+    <div class="chip yes"><b>YES</b>Runs 24/7 on the Oracle server, ₹0 while testing</div>
+  </div>
+</section>
+
+<section>
+  <h2>A day in the system</h2>
+  <div class="tl">
+    <div class="st you"><span class="tm">ONCE · SETUP</span><h3>Load and connect</h3><p>Upload the 11,000-line KB, the 90 script ideas, the crawler rules and the seed sites. Log in to Higgsfield once so the server can use your credits.</p></div>
+    <div class="st"><span class="tm">8 PM</span><h3>MAI starts the night cycle</h3><p>Discovery, Crawler, Filter and Knowledge run in a loop: find sites, read pages, keep the relevant ones, learn into the KB.</p></div>
+    <div class="st"><span class="tm">8 PM → 8 AM</span><h3>Crawl and learn</h3><p>Roughly 8k–30k pages visited, 800–2.5k kept, 300–800 new learnings, 30–150 new sites found. These are estimates until the first real runs.</p></div>
+    <div class="st"><span class="tm">8 AM</span><h3>Overnight report</h3><p>The crawler stops. The dashboard shows pages read, new sites and what the KB learned. Doubtful items wait in the holding area.</p></div>
+    <div class="st you"><span class="tm">PRESS CRAWL · ~3–5 MIN</span><h3>Get 6 ideas</h3><p>Adapt and Strategist return 2 blog, 2 creative and 2 script ideas shaped to Magppie. Press again for a fresh set; earlier ideas never repeat.</p></div>
+    <div class="st you"><span class="tm">PRESS FINALISE · ~15–35 MIN</span><h3>Content gets made</h3><p>Blogs take 3–5 minutes. Creatives and videos go through Higgsfield and take 10–30 minutes. Everything lands on the dashboard to watch, approve, download or regenerate.</p></div>
+    <div class="st you"><span class="tm">6 PM · MANAGER</span><h3>Daily approval review</h3><p>The manager gets a Chrome notification and a dashboard alert, then approves, rejects or edits each doubtful item, adds any new knowledge, and presses Finalise review. Approved items are in the KB before the 8 pm crawl starts.</p></div>
+    <div class="st"><span class="tm">PHASE 2</span><h3>Learn from results</h3><p>Ad, analytics and CRM results flow back into the KB so future ideas lean toward what performs.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Stack</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Layer</th><th>Choice</th><th>Backup</th></tr></thead>
+    <tbody>
+      <tr><td class="nm">Your screen</td><td>Web dashboard + Chrome voice</td><td class="alt">Pipecat</td></tr>
+      <tr><td class="nm">Coordinator</td><td>Hermes Agent</td><td class="alt">LangGraph</td></tr>
+      <tr><td class="nm">Finding + reading</td><td>SearXNG + Crawl4AI</td><td class="alt">Firecrawl</td></tr>
+      <tr><td class="nm">Learning</td><td>Cognee + Postgres (pgvector)</td><td class="alt">Graphiti</td></tr>
+      <tr><td class="nm">Research + writing</td><td>GPT Researcher</td><td class="alt">Stanford STORM</td></tr>
+      <tr><td class="nm">AI models</td><td>Groq + Gemini + OpenRouter, all free</td><td class="alt">Claude API (paid upgrade)</td></tr>
+      <tr><td class="nm">Images + video</td><td>Higgsfield MCP with your premium credits</td><td class="alt">Copy-paste "Higgsfield pack"</td></tr>
+      <tr><td class="nm">Storage</td><td>Postgres on the server</td><td class="alt">Supabase cloud</td></tr>
+      <tr><td class="nm">Server</td><td>Oracle Cloud Mumbai (trial credit now, free ARM server later)</td><td class="alt">AWS Lightsail or a VPS</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</div>
+

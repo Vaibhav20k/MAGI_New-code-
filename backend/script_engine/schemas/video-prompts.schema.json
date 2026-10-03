@@ -1,0 +1,387 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VideoPrompts",
+  "description": "Phase 3 of the Magppie Video Production Rules: one generation prompt per 30-second scene and the Edit Sheet. Written only against a locked script and an approved, unchanged lookbook.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "script_hash",
+    "lookbook_hash",
+    "continuity_bible",
+    "scene_prompts",
+    "edit_sheet"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "script_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "lookbook_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "lookbook_id": {
+      "type": "string"
+    },
+    "platform_settings": {
+      "type": "object",
+      "properties": {
+        "aspect_ratio": {
+          "type": "string"
+        },
+        "scene_duration_seconds": {
+          "type": "integer"
+        },
+        "scene_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "continuity_bible": {
+      "type": "string",
+      "minLength": 20,
+      "description": "The approved Continuity Bible as one block. The same text, word for word, is in every scene prompt."
+    },
+    "scene_prompts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "scene_number",
+          "time_range",
+          "continuity_bible",
+          "start_frame",
+          "beats",
+          "shot",
+          "lens",
+          "movement",
+          "realism_cues",
+          "exit_frame",
+          "negative_prompt",
+          "audio",
+          "vo",
+          "text_overlays",
+          "prompt_text"
+        ],
+        "properties": {
+          "scene_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "time_range": {
+            "type": "string"
+          },
+          "continuity_bible": {
+            "type": "string",
+            "minLength": 20
+          },
+          "start_frame": {
+            "type": "object",
+            "required": [
+              "entry_frame",
+              "lookbook_keyframe_reference",
+              "starting_visual_state"
+            ],
+            "properties": {
+              "entry_frame": {
+                "type": "string"
+              },
+              "lookbook_keyframe_reference": {
+                "type": "string"
+              },
+              "starting_visual_state": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "beats": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "beat_number",
+                "time_range",
+                "action"
+              ],
+              "properties": {
+                "beat_number": {
+                  "type": "integer"
+                },
+                "time_range": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "shot": {
+            "type": "string"
+          },
+          "lens": {
+            "type": "string"
+          },
+          "movement": {
+            "type": "string"
+          },
+          "realism_cues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exit_frame": {
+            "type": "object",
+            "required": [
+              "exit_frame",
+              "lookbook_keyframe_reference",
+              "ending_visual_state"
+            ],
+            "properties": {
+              "exit_frame": {
+                "type": "string"
+              },
+              "lookbook_keyframe_reference": {
+                "type": "string"
+              },
+              "ending_visual_state": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "negative_prompt": {
+            "type": "string",
+            "minLength": 20,
+            "description": "Rule 2.5, exactly as the rulebook words it."
+          },
+          "audio": {
+            "type": "object",
+            "required": [
+              "ambient_sound",
+              "music",
+              "sound_effects",
+              "silence"
+            ],
+            "properties": {
+              "ambient_sound": {
+                "type": "string"
+              },
+              "music": {
+                "type": "string"
+              },
+              "sound_effects": {
+                "type": "string"
+              },
+              "silence": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "vo": {
+            "type": "object",
+            "required": [
+              "narrator",
+              "lines"
+            ],
+            "properties": {
+              "narrator": {
+                "type": "string"
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "time_range",
+                    "line"
+                  ],
+                  "properties": {
+                    "time_range": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "string"
+                    },
+                    "delivery": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false,
+            "description": "The locked narration, for the edit. Never rewritten here."
+          },
+          "text_overlays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "timing"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "timing": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "description": "TEXT FOR EDIT: instructions for the editor, never generated in the frame (Rule 2.4)."
+          },
+          "prompt_text": {
+            "type": "string",
+            "minLength": 100,
+            "description": "The scene prompt assembled in the rulebook's Phase 3 order."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "edit_sheet": {
+      "type": "object",
+      "required": [
+        "scenes",
+        "music_track",
+        "end_card",
+        "stitching_notes"
+      ],
+      "properties": {
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "scene_number",
+              "duration_seconds",
+              "source_clip",
+              "entry_frame",
+              "exit_frame",
+              "vo",
+              "vo_timing",
+              "music",
+              "sound_effects",
+              "ambient_sound",
+              "text_overlays",
+              "transition",
+              "notes"
+            ],
+            "properties": {
+              "scene_number": {
+                "type": "integer"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "source_clip": {
+                "type": "string"
+              },
+              "entry_frame": {
+                "type": "string"
+              },
+              "exit_frame": {
+                "type": "string"
+              },
+              "vo": {
+                "type": "string"
+              },
+              "vo_timing": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "time_range",
+                    "line"
+                  ],
+                  "properties": {
+                    "time_range": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "string"
+                    },
+                    "delivery": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "music": {
+                "type": "string"
+              },
+              "sound_effects": {
+                "type": "string"
+              },
+              "ambient_sound": {
+                "type": "string"
+              },
+              "text_overlays": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "timing"
+                  ],
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "timing": {
+                      "type": "string"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "transition": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "music_track": {
+          "type": "string"
+        },
+        "end_card": {
+          "type": "string"
+        },
+        "stitching_notes": {
+          "type": "string"
+        },
+        "call_to_action": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

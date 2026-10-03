@@ -1,0 +1,10 @@
+[project]
+name = "mai"
+version = "0.1.0"
+description = "Marketing MAI"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]

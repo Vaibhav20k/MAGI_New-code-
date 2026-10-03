@@ -1,0 +1,19 @@
+# Public door to the dashboard: HTTPS with an automatic certificate, everything passed to the backend.
+# Every request is marked X-MAI-Public, which makes the backend ask for a login (backend/app/auth.py).
+{$PUBLIC_HOST} {
+	encode gzip
+	request_body {
+		max_size 25MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+	reverse_proxy backend:8000 {
+		header_up X-MAI-Public "1"
+	}
+}

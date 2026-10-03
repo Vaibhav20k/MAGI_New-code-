@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marketing · MAGI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap">
+<style>
+/* Layout: status bar, four work tabs (Ideas, Content, Approvals, Crawler). Each idea is its own decision. */
+:root{
+  /* MAGPPIE's own identity: obsidian stone, copper and silver, Lato, generous space */
+  --bg:#09090B;--panel:rgba(12,15,28,.82);--panel2:#141a2c;--line:#222a40;--fg:#F1F2F4;--muted:#8B9099;
+  --cyan:#C9CED6;--mint:#9CC5A1;--amber:#E09A66;--lilac:#C9CED6;--pink:#E07A6A;
+  --display:"Lato","Helvetica Neue",system-ui,sans-serif;
+  --body:"Lato","Helvetica Neue",system-ui,sans-serif;
+  --mono:"Lato","Helvetica Neue",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:300px}          /* a tab opened by its address must not hide under the fixed header */
+body{margin:0;background:#04050A;color:var(--fg);font:15px/1.55 var(--body);
+  background-image:radial-gradient(1200px 620px at 50% -80px,rgba(40,110,255,.20),transparent 70%),linear-gradient(rgba(111,216,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(111,216,255,.03) 1px,transparent 1px);
+  background-size:auto,44px 44px,44px 44px;background-attachment:fixed,scroll,scroll}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+a{color:var(--cyan)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);z-index:5}
+.brand{font:600 20px var(--display);letter-spacing:.04em}
+.brand small{font:500 11px var(--mono);letter-spacing:.14em;color:var(--muted);margin-left:10px}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 11px var(--mono);letter-spacing:.1em;color:var(--muted);margin-left:auto}
+.stats b{color:var(--cyan);font-weight:500;font-variant-numeric:tabular-nums}
+.btn{height:38px;padding:0 16px;border-radius:4px;border:1px solid var(--line);background:var(--panel2);font:700 11.5px var(--mono);letter-spacing:.1em;white-space:nowrap}
+.btn:hover{border-color:var(--cyan)}
+.btn.go{border-color:var(--amber);color:var(--amber)}
+.btn.no{border-color:var(--line);color:var(--muted)}
+.btn.warn{border-color:var(--amber);color:var(--amber)}
+.btn.big{height:52px;padding:0 26px;font-size:14px;border-color:var(--amber);color:var(--amber)}
+.btn:disabled{opacity:.5;cursor:default}
+.realm{text-align:center;padding:26px 16px 14px}
+.realm h1{margin:0;font:300 32px/1.1 var(--display);letter-spacing:.42em;text-indent:.42em;text-transform:uppercase;text-shadow:0 0 24px rgba(255,170,100,.55);animation:name-in .8s cubic-bezier(.2,.7,.2,1)}
+@keyframes name-in{from{opacity:0;letter-spacing:.8em;text-indent:.8em}to{opacity:1}}
+.realm .rule{height:1px;width:min(560px,80vw);margin:12px auto;background:linear-gradient(90deg,transparent,rgba(255,196,128,.95),transparent);position:relative;box-shadow:0 0 12px rgba(255,170,100,.5)}
+.realm .rule::after{content:"";position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;transform:rotate(45deg);background:var(--bg);border:1px solid var(--amber)}
+.realm b{font-size:11.5px;letter-spacing:.3em;color:var(--amber)}
+nav{display:flex;justify-content:center;gap:4px;padding:0 22px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:none;border:none;border-bottom:2px solid transparent;padding:12px 14px;font:500 12px var(--mono);letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+nav button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--amber)}
+nav .n{color:var(--amber);margin-left:6px}
+main{max-width:1280px;margin:0 auto;padding:30px 22px 60px;display:flex;flex-direction:column;gap:28px}
+h2{font:600 18px var(--display);margin:0;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:8px;height:8px;border:1.5px solid var(--amber);transform:rotate(45deg);flex:none}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.lead{color:var(--muted);margin:0;max-width:70ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.col>h3{font:500 11px var(--mono);letter-spacing:.16em;color:var(--muted);margin:0;text-transform:uppercase}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;min-width:0;
+  transition:transform .28s cubic-bezier(.2,.7,.2,1),box-shadow .28s,border-color .28s;animation:rise3d .55s cubic-bezier(.2,.7,.2,1) both;transform-origin:50% 100%}
+.card:hover{transform:perspective(1100px) translateY(-5px) rotateX(1.4deg);border-color:rgba(111,216,255,.35);box-shadow:0 22px 46px rgba(0,0,0,.55),0 0 28px rgba(60,150,255,.12)}
+.col>.card:nth-child(3){animation-delay:.08s}.col>.card:nth-child(4){animation-delay:.16s}
+.cols>section:nth-child(2) .card,.cols>.card:nth-child(2){animation-delay:.07s}.cols>section:nth-child(3) .card,.cols>.card:nth-child(3){animation-delay:.14s}
+@keyframes rise3d{from{opacity:0;transform:perspective(1100px) translateY(22px) rotateX(-7deg)}to{opacity:1;transform:none}}
+.card h4{margin:0;font:700 18px/1.3 var(--display);text-wrap:balance}
+.card p{margin:0}
+.dim{color:var(--muted);font-size:13.5px}
+.k{font:500 10.5px var(--mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.pill{font:500 10.5px var(--mono);letter-spacing:.1em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.mint{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 50%,transparent)}
+.pill.amber{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 50%,transparent)}
+.pill.pink{color:var(--pink);border-color:color-mix(in srgb,var(--pink) 50%,transparent)}
+.pill.cyan{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 50%,transparent)}
+.src{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.src a{color:var(--muted)}
+.empty{border:1px dashed var(--line);border-radius:4px;padding:22px;color:var(--muted);text-align:center}
+details{border-top:1px solid var(--line);padding-top:8px}
+summary{cursor:pointer;font:500 11px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.md{max-width:74ch;overflow-wrap:anywhere}
+iframe.book{width:100%;height:640px;border:1px solid var(--line);border-radius:6px;background:#0B0B0D;margin-top:10px}
+pre.prompt{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.55 var(--body);color:var(--muted);margin:0 0 14px}
+.sw{display:inline-block;width:26px;height:26px;border-radius:5px;border:1px solid var(--line);vertical-align:middle;margin-right:6px}
+.ask textarea{margin:8px 0}
+.md h1{font:600 22px var(--display);margin:14px 0 6px}.md h2{font:600 18px var(--display);margin:16px 0 4px;display:block}.md h2::before{display:none}
+.md h3{font:600 15px var(--display);margin:12px 0 4px}.md p{margin:8px 0}.md ul{margin:6px 0;padding-left:20px}
+img.out,video.out{max-width:100%;border-radius:4px;border:1px solid var(--line);background:#000;display:block}
+video.out{max-height:560px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font:500 10.5px var(--mono);letter-spacing:.14em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+input[type=text],textarea{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 12px;font:14px var(--body);min-width:0}
+textarea{width:100%;min-height:70px;resize:vertical}
+.grow{flex:1;min-width:200px}
+.spin{display:inline-block;width:12px;height:12px;border:1.5px solid var(--amber);border-right-color:transparent;border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px;margin-right:6px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--cyan);border-radius:4px;padding:10px 16px;max-width:min(560px,92vw);z-index:9}
+.prog{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;width:4%;background:linear-gradient(90deg,#C77B4A,#E09A66 55%,#C9CED6);border-radius:999px;transition:width 1s linear}
+.prog.unknown .bar>i{width:35%;animation:slide 1.8s ease-in-out infinite alternate}
+@keyframes slide{from{margin-left:0}to{margin-left:65%}}
+.words{display:flex;flex-direction:column;gap:10px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f input,.f textarea,.f select{width:100%}
+select{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 12px;font:14px var(--body)}
+.words textarea{min-height:0}
+button.pill{background:none;cursor:pointer}
+button.pill:hover{border-color:var(--cyan)}
+a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--fg)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding-top:8px}
+.thumbs img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.card,.realm h1{animation:none}.card:hover{transform:none}.spin{animation:none}.bar>i{transition:none}.prog.unknown .bar>i{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <a class="btn solo" href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--amber);border-color:var(--amber)">← MAGI</a>
+  <img class="solo" src="/static/logo-white.svg" alt="MAGPPIE" width="80" height="18" style="display:block;height:18px;width:auto">
+  <div class="brand"><small style="margin:0">A DEPARTMENT OF MAGI</small></div>
+  <div class="stats" id="stats">connecting…</div>
+  <div class="row">
+    <span id="hf"></span>
+    <button class="btn" id="alerts" hidden>ENABLE ALERTS</button>
+    <button class="btn no" id="logout" hidden>LOG OUT</button>
+    <a class="btn solo" href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--cyan);border-color:var(--cyan)">TALK TO MAGI</a>
+  </div>
+</header>
+<div class="realm"><h1>Marketing</h1><div class="rule"></div><b>DEPARTMENT OPEN</b></div>
+<nav role="tablist" id="nav">
+  <button role="tab" data-t="ideas" aria-selected="true">IDEAS</button>
+  <button role="tab" data-t="content" aria-selected="false">CONTENT<span class="n" id="n-content"></span></button>
+  <button role="tab" data-t="approvals" aria-selected="false">APPROVALS<span class="n" id="n-held"></span></button>
+  <button role="tab" data-t="crawler" aria-selected="false">CRAWLER</button>
+</nav>
+
+<main id="ideas">
+  <div class="row">
+    <button class="btn big" id="crawl">CRAWL · GET NEW IDEAS</button>
+    <p class="lead" id="crawl-note">MAGI picks 2 blog, 2 creative and 2 video ideas from what she learned, shaped to MAGPPIE. Approve the ones you like; each approved idea gets made. On a creative you can change the words first.</p>
+  </div>
+  <div class="cols" id="idea-cols"></div>
+</main>
+
+<main id="content" hidden>
+  <h2>Blogs</h2><div class="col" id="blogs"></div>
+  <h2>Creatives</h2><div class="cols" id="creatives"></div>
+  <h2>Videos</h2><div class="cols" id="videos"></div>
+</main>
+
+<main id="approvals" hidden>
+  <div class="row">
+    <h2>Waiting for the manager</h2>
+    <button class="btn go" id="fin-review" style="margin-left:auto">FINALISE REVIEW</button>
+  </div>
+  <p class="lead">Doubtful learnings are held here and are not used by any agent. Decide on each, then press Finalise review. Approved items join the knowledge base; rejected ones are never asked again.</p>
+  <div class="col" id="held"></div>
+  <h2>Teach MAGI</h2>
+  <div class="row">
+    <input type="text" class="grow" id="rule-text" placeholder="A fact to add, or a word, topic or claim to never use" aria-label="Knowledge or rule">
+    <button class="btn go" data-rule="add_knowledge">ADD TO KNOWLEDGE</button>
+    <button class="btn warn" data-rule="never_use">NEVER USE</button>
+  </div>
+</main>
+
+<main id="crawler" hidden>
+  <div class="row">
+    <h2>Crawler</h2>
+    <span id="crawl-state" class="pill"></span>
+    <button class="btn go" id="c-start" style="margin-left:auto">START NOW</button>
+    <button class="btn warn" id="c-stop">STOP</button>
+  </div>
+  <p class="lead">Runs by itself every night from 8 PM to 8 AM. It reads your seed sites, finds similar ones, keeps what is relevant and learns from it.</p>
+  <div class="row">
+    <input type="text" class="grow" id="link" placeholder="Paste a link you like (post, article, video) to read it first on the next crawl" aria-label="Inspiration link">
+    <button class="btn" id="link-add">ADD LINK</button>
+  </div>
+  <h2>Recent runs</h2><div class="tw"><table id="runs"></table></div>
+  <h2>What MAGI learned</h2><div class="col" id="learned"></div>
+  <h2>Sites</h2><div class="tw"><table id="sources"></table></div>
+</main>
+
+<div id="toast" role="status" hidden></div>
+
+<script>
+const _fetch = window.fetch;            // on the web address, an ended session sends you to the login
+window.fetch = async (...a) => { const r = await _fetch(...a); if (r.status === 401 && r.headers.get("X-MAI-Login")) location.href = "/login"; return r; };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "#";
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `Request failed (${r.status})`);
+  return data;
+}
+function setHTML(el, html) { if (el._html !== html) { el._html = html; el.innerHTML = html; } }   // re-render only on change, so open sections and edits survive refreshes
+let toastTimer;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 5000); }
+async function act(fn, done) { try { await fn(); if (done) toast(done); } catch (e) { toast(e.message); } refreshAll(); }
+
+function md(src) {                       // small, safe Markdown renderer for blogs
+  const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*]+)\*/g, "$1<i>$2</i>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  let out = "", list = false;
+  for (const line of String(src || "").split("\n")) {
+    const h = line.match(/^(#{1,4})\s+(.*)/), li = line.match(/^\s*[-*]\s+(.*)/);
+    if (li) { if (!list) { out += "<ul>"; list = true; } out += `<li>${inline(li[1])}</li>`; continue; }
+    if (list) { out += "</ul>"; list = false; }
+    if (h) out += `<h${Math.min(h[1].length, 3)}>${inline(h[2])}</h${Math.min(h[1].length, 3)}>`;
+    else if (/^\s*-{3,}\s*$/.test(line)) out += "";
+    else if (line.trim()) out += `<p>${inline(line)}</p>`;
+  }
+  return out + (list ? "</ul>" : "");
+}
+
+// ---------------- Tabs ----------------
+const tabs = ["ideas", "content", "approvals", "crawler"];
+function show(t) {
+  tabs.forEach(x => { $(x).hidden = x !== t; });
+  document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === t));
+  try { history.replaceState(null, "", "#" + t); } catch (_) {}
+  refreshAll();
+}
+$("nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(b.dataset.t); });
+
+// ---------------- Status ----------------
+let hfConnected = false;
+try { hfConnected = localStorage.getItem("mai-hf") === "1"; } catch (_) {}
+async function loadStatus() {
+  const s = await api("/api/status"), c = s.counts;
+  $("stats").innerHTML = `<span>CRAWLER <b>${s.crawl_running ? "RUNNING" : "IDLE"}</b></span><span>PAGES READ <b>${c.pages}</b></span>` +
+    `<span>KEPT <b>${c.pages_kept}</b></span><span>LEARNINGS <b>${c.learnings}</b></span><span>SITES FOUND <b>${c.discovered_sources}</b></span>` +
+    `<span>KNOWLEDGE <b>${c.kb_core + c.kb_learned}</b></span>`;
+  $("n-held").textContent = c.held ? c.held : "";
+  $("crawl-state").textContent = s.crawl_running ? "RUNNING NOW" : "IDLE";
+  $("crawl-state").className = "pill " + (s.crawl_running ? "mint" : "");
+}
+let hfChecked = 0;
+async function loadHf(force) {              // resolves to true when the connection state changed
+  if (!force && Date.now() - hfChecked < 60000) return false;     // asking Higgsfield for the balance is slow; once a minute is enough
+  hfChecked = Date.now();
+  const h = await api("/api/higgsfield/status"), was = hfConnected;
+  hfConnected = !!h.connected;
+  try { localStorage.setItem("mai-hf", hfConnected ? "1" : "0"); } catch (_) {}
+  $("hf").innerHTML = h.connected
+    ? `<span class="pill mint">HIGGSFIELD · ${esc(Math.round(h.credits ?? 0))} CREDITS</span>`
+    : `<a class="btn warn" href="/api/higgsfield/login" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--amber)">CONNECT HIGGSFIELD</a>`;
+  return was !== hfConnected;
+}
+
+// ---------------- Ideas ----------------
+const TYPE = {blog: "Blog ideas", creative: "Creative ideas", video: "Video ideas"};
+const MAKES = {blog: "the full blog", creative: hf => hf ? `the finished image${kinds.credits_each ? " · " + kinds.credits_each + " credits" : ""}` : "the brief (connect Higgsfield for the image)", video: "the script, then you approve the video"};
+let kinds = {formats: {}, credits_each: null};      // story / poster / post, from the house styles
+const drafts = {};                                  // "idea-7" or "creative-3" → the words as edited on the card
+const WORDS = ["format", "headline", "highlight", "supporting_line", "visual", "bottom_line"];
+const editing = el => el.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+function draftFor(key, from) {
+  return drafts[key] || (drafts[key] = Object.fromEntries(WORDS.map(w => [w, from[w] || ""])));
+}
+function wordsForm(key, d, withPicture) {             // the editable brief of a creative
+  if (!kinds.formats[d.format]) d.format = Object.keys(kinds.formats)[0] || "";
+  if (!d.bottom_line) d.bottom_line = (kinds.formats[d.format] || {}).bottom_line || "";
+  const inp = (name, label, hint) => `<label class="f"><span class="k">${label}</span>` +
+    `<input type="text" data-key="${key}" data-f="${name}" value="${esc(d[name])}" placeholder="${esc(hint || "")}"></label>`;
+  return `<div class="words"><label class="f"><span class="k">Kind</span><select data-key="${key}" data-f="format">` +
+    Object.entries(kinds.formats).map(([k, f]) => `<option value="${esc(k)}" ${d.format === k ? "selected" : ""}>${esc(f.label)} · ${esc(f.aspect_ratio)}</option>`).join("") + `</select>` +
+    `<span class="dim">${esc((kinds.formats[d.format] || {}).use)}</span></label>` +
+    `<label class="f"><span class="k">Headline on the image</span><textarea rows="2" data-key="${key}" data-f="headline">${esc(d.headline)}</textarea></label>` +
+    inp("highlight", "Words in colour", "one to three words from the headline") +
+    inp("supporting_line", "Small line under it") +
+    (withPicture ? `<label class="f"><span class="k">Picture</span><textarea rows="2" data-key="${key}" data-f="visual">${esc(d.visual)}</textarea></label>` : "") +
+    inp("bottom_line", "Bottom line") + `</div>`;
+}
+function onWords(e) {                                 // keep what is typed, across refreshes
+  const el = e.target.closest("[data-f]"); if (!el) return;
+  const d = drafts[el.dataset.key]; if (!d) return;
+  if (el.dataset.f === "format") {                    // a new kind brings its own bottom line, unless it was changed by hand
+    const was = (kinds.formats[d.format] || {}).bottom_line, now = (kinds.formats[el.value] || {}).bottom_line;
+    if (!d.bottom_line || d.bottom_line === was) d.bottom_line = now || "";
+    d.format = el.value;
+    const box = el.closest(".words");
+    box.querySelector('[data-f="bottom_line"]').value = d.bottom_line;
+    el.parentElement.querySelector(".dim").textContent = (kinds.formats[d.format] || {}).use || "";
+  } else d[el.dataset.f] = el.value;
+}
+function madeBlock(i) {                                // progress and result of an approved idea, on its own card
+  const m = i.made, see = label => `<button class="btn" data-goto="content">${label}</button>`;
+  if (!m) return i.status === "finalising" ? progress("", i.type === "blog" ? 240 : 60, i.type === "blog" ? "Writing the blog · about 4 minutes" : "Starting") : "";
+  if (m.status === "failed") return `<p class="dim" style="color:var(--pink)">It did not finish. Open Content to see why and try again.</p><div class="row">${see("OPEN CONTENT")}</div>`;
+  if (i.type === "creative") {
+    if (m.status === "writing") return progress(m.started_at, 40, "Step 1 of 2 · Writing the brief");
+    if (m.status === "generating") return progress(m.started_at, 110, "Step 2 of 2 · Higgsfield is making the image");
+    return (m.media ? `<img class="out" src="${esc(m.media)}" alt="${esc(i.title)}">` : "") + `<div class="row">${hfLink(m.remote)}${see("SEE IT IN CONTENT")}</div>`;
+  }
+  if (i.type === "video") {
+    if (m.status === "writing") return progress(m.started_at, 330, "Step 1 of 4 · Three agents are writing the script");
+    if (m.status === "lookbook") return progress(m.started_at, 150, "Step 2 of 4 · Agent 4 is drawing up the lookbook");
+    if (m.status === "prompting") return progress(m.started_at, 130, "Step 3 of 4 · Agent 5 is writing the video prompts");
+    if (m.status === "generating") return progress(m.started_at, 420, "Step 4 of 4 · Higgsfield is making the video");
+    if (m.media) return `<video class="out" src="${esc(m.media)}" controls preload="metadata"></video><div class="row">${hfLink(m.remote)}${see("SEE IT IN CONTENT")}</div>`;
+    const next = {lookbook_ready: "LOOKBOOK READY · APPROVE IT", package_ready: "PACKAGE COMPLETE · MAKE THE VIDEO"}[m.status] || "SCRIPT READY · APPROVE IT";
+    return `<div class="row"><button class="btn go" data-goto="content">${next}</button></div>`;
+  }
+  return `<div class="row">${see("READ THE BLOG")}</div>`;
+}
+function ideaCard(i) {
+  const src = (i.inspired_by || []).map(s => s.url
+    ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(s.title || s.site || s.learning || s.url)}</a>`
+    : esc(s.learning || "")).join(" · ");
+  const state = ({finalising: '<span class="pill amber">MAKING IT</span>', finalised: '<span class="pill mint">APPROVED</span>'}[i.status] || "") + madeBlock(i);
+  const what = typeof MAKES[i.type] === "function" ? MAKES[i.type](hfConnected) : MAKES[i.type];
+  const open = i.status === "proposed" || i.status === "selected", p = i.payload || {};
+  let brief = "";
+  if (i.type === "creative" && open) brief = `<p class="k">Brief · change anything before you approve</p>` + wordsForm("idea-" + i.id, draftFor("idea-" + i.id, p), true);
+  else if (i.type === "creative") brief = `<p class="dim"><span class="k">${esc((kinds.formats[p.format] || {}).label || "Creative")}</span><br>${esc(p.headline)}${p.supporting_line ? "<br>" + esc(p.supporting_line) : ""}</p>`;
+  const buttons = open
+    ? `<div class="row"><button class="btn go" data-approve="${i.id}" data-type="${esc(i.type)}" title="MAGI makes ${esc(what)}">APPROVE</button>` +
+      `<button class="btn no" data-reject="${i.id}">SKIP</button><span class="dim">Approve makes ${esc(what)}</span></div>` : state;
+  return `<article class="card"><h4>${esc(i.title)}</h4><p>${esc(i.summary)}</p>` +
+    `<p class="dim"><span class="k">Why it fits</span><br>${esc(i.angle)}</p>` +
+    (src ? `<p class="src"><span class="k">Inspired by</span><br>${src}</p>` : `<p class="src"><span class="k">Inspired by</span><br>Company knowledge only (no outside signal yet)</p>`) +
+    brief + buttons + `</article>`;
+}
+let batchRunning = false;
+async function loadIdeas() {
+  const d = await api("/api/ideas/latest");
+  if (d.creative) kinds = d.creative;
+  batchRunning = d.batch && d.batch.status === "running";
+  $("crawl").disabled = batchRunning;
+  $("crawl").innerHTML = batchRunning ? '<span class="spin"></span>FINDING IDEAS…' : "CRAWL · GET NEW IDEAS";
+  if (d.batch && d.batch.status === "failed") $("crawl-note").textContent = "The last attempt failed: " + (d.batch.error || "unknown error") + " Press Crawl to try again.";
+  if (editing($("idea-cols"))) return;              // someone is typing in a brief
+  const live = d.ideas.filter(i => i.status !== "rejected" && i.status !== "discarded");
+  setHTML($("idea-cols"), batchRunning && !live.length
+    ? '<div class="empty">MAGI is choosing ideas. This takes about a minute.</div>'
+    : !live.length ? '<div class="empty">No ideas yet. Press Crawl to get the first set.</div>'
+    : Object.keys(TYPE).map(t => `<section class="col"><h3>${TYPE[t]}</h3>` +
+        (live.filter(i => i.type === t).map(ideaCard).join("") || '<div class="empty">None in this set.</div>') + `</section>`).join(""));
+  tick();
+}
+$("crawl").addEventListener("click", () => act(() => api("/api/ideas/generate", {}), "Finding new ideas. About a minute."));
+$("idea-cols").addEventListener("input", onWords);
+$("idea-cols").addEventListener("click", e => {
+  const a = e.target.closest("[data-approve]"), r = e.target.closest("[data-reject]"), g = e.target.closest("[data-goto]");
+  if (a) { const id = a.dataset.approve, words = a.dataset.type === "creative" ? drafts["idea-" + id] : null;
+    if (words && !words.headline.trim()) return toast("Write a headline first.");
+    act(() => api(`/api/ideas/${id}/approve`, words ? {brief: words} : {}),
+      a.dataset.type === "creative" && hfConnected ? "Approved. The image takes about two minutes. Watch it on the Content tab." : "Approved. MAGI is making it."); }
+  if (r) act(() => api(`/api/ideas/${r.dataset.reject}/reject`, {}));
+  if (g) show(g.dataset.goto);
+});
+
+// ---------------- Content ----------------
+let busyContent = false;
+const quotes = {};                    // video id → price options, shown before any credits are spent
+const opened = new Set();             // sections the reader opened, so a refresh does not close them
+document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.open; if (k) e.target.open ? opened.add(k) : opened.delete(k); }, true);
+const fold = (key, title, body, open) => `<details data-open="${key}" ${opened.has(key) || open ? "open" : ""}><summary>${title}</summary>${body}</details>`;
+function progress(startedAt, seconds, label) {       // the bar itself is moved by tick(), once a second
+  return `<div class="prog" data-start="${esc(startedAt || "")}" data-secs="${seconds}"><div class="row"><span class="dim"><span class="spin"></span>${label}</span>` +
+    `<span class="dim" data-left style="margin-left:auto"></span></div><div class="bar"><i></i></div></div>`;
+}
+function tick() {
+  document.querySelectorAll(".prog").forEach(p => {
+    const start = Date.parse(p.dataset.start), secs = +p.dataset.secs, gone = Math.max(0, (Date.now() - start) / 1000);
+    if (isNaN(start)) return p.classList.add("unknown");      // no start time: the bar just keeps moving
+    const pct = gone < secs ? 4 + 86 * gone / secs : Math.min(97, 90 + (gone - secs) / secs * 7);
+    p.querySelector("i").style.width = pct.toFixed(1) + "%";
+    const left = secs - gone;
+    p.querySelector("[data-left]").textContent = left > 90 ? `about ${Math.round(left / 60)} min left` : left > 8 ? `about ${Math.ceil(left / 10) * 10} sec left` : "almost done";
+  });
+}
+setInterval(tick, 1000);
+const hfLink = u => u ? `<a class="btn" href="${esc(safeUrl(u))}" target="_blank" rel="noopener">OPEN ON HIGGSFIELD</a>` : "";
+function creativeCard(c) {
+  const b = c.brief || {}, imgs = c.image_urls || [], kind = (kinds.formats[b.format] || {}).label || b.format_label;
+  const img = imgs.length ? `<img class="out" src="${esc(imgs[0])}" alt="${esc(b.headline || b.title || "Generated creative")}">` : "";
+  const state = {writing: '<span class="pill amber">WORKING</span>', brief_ready: '<span class="pill cyan">BRIEF READY</span>',
+    generating: '<span class="pill amber">WORKING</span>', ready: '<span class="pill mint">READY</span>',
+    failed: '<span class="pill pink">FAILED</span>', manual: '<span class="pill">BRIEF READY</span>'}[c.status] || "";
+  const busy = c.status === "writing" ? progress(c.started_at, 40, "Step 1 of 2 · Writing the brief")
+    : c.status === "generating" ? progress(c.started_at, 110, "Step 2 of 2 · Higgsfield is making the image") : "";
+  const cost = kinds.credits_each ? ` · ${kinds.credits_each} CREDITS` : "";
+  const key = "creative-" + c.id;
+  let actions = "";
+  if (!busy && img) actions = hfLink((c.remote_urls || [])[0]) + `<a class="btn" href="${esc(imgs[0])}" download>DOWNLOAD</a>`;
+  if (!busy && !img) actions = hfConnected ? `<button class="btn go" data-gen-creative="${c.id}">GENERATE IMAGE${cost}</button>` : '<span class="dim">Connect Higgsfield to generate the image.</span>';
+  const again = !busy && hfConnected && Object.keys(kinds.formats).length ? fold("again-" + c.id, "CHANGE THE WORDS AND MAKE IT AGAIN",
+    wordsForm(key, draftFor(key, b), false) + `<div class="row"><button class="btn go" data-regen-creative="${c.id}">MAKE IT AGAIN${cost}</button></div>`) : "";
+  const older = imgs.length > 1 ? fold("older-" + c.id, `EARLIER VERSIONS · ${imgs.length - 1}`,
+    `<div class="thumbs">${imgs.slice(1).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Earlier version" loading="lazy"></a>`).join("")}</div>`) : "";
+  return `<article class="card"><div class="row"><h4>${esc(b.title || c.idea_title)}</h4>${kind ? `<span class="pill">${esc(kind).toUpperCase()}</span>` : ""}${state}</div>${busy}${img}` +
+    (c.error ? `<p class="dim" style="color:var(--pink)">${esc(c.error)}</p>` : "") +
+    (actions ? `<div class="row">${actions}</div>` : "") +
+    `<p><span class="k">Headline</span><br>${esc(b.headline)}</p>` + (b.supporting_line ? `<p><span class="k">Small line</span><br>${esc(b.supporting_line)}</p>` : "") +
+    (b.caption ? `<p class="dim"><span class="k">Caption to post with it</span><br>${esc(b.caption)} ${esc((b.hashtags || []).join(" "))}</p>` : "") +
+    again + older +
+    fold("brief-" + c.id, "FULL BRIEF AND PROMPT", `<p><span class="k">Picture</span><br>${esc(b.photo || b.visual_description)}</p>` +
+      (b.bottom_line ? `<p><span class="k">Bottom line</span><br>${esc(b.bottom_line)}</p>` : "") +
+      (b.why_it_fits ? `<p><span class="k">Why it fits</span><br>${esc(b.why_it_fits)}</p>` : "") +
+      (b.image_prompts || []).slice(0, 1).map(p => `<p class="dim"><span class="k">Prompt sent to Higgsfield</span><br>${esc(p.prompt)}</p>`).join("")) + `</article>`;
+}
+function voiceLine(d) {          // how the voice-over is spoken: tone, pace, pauses, stressed words
+  if (!d) return "";
+  const parts = [d.tone, d.pace, d.pauses && "Pauses: " + d.pauses, d.emphasis && "Stress: " + d.emphasis].filter(Boolean);
+  return parts.length ? `<br><span class="dim">Voice: ${esc(parts.join(" · "))}</span>` : "";
+}
+function shootingFold(v) {       // the director's part of the script: one world, ten directions, five timed beats
+  const sc = v.script || {}, bible = sc.continuity_bible || {}, shots = sc.shooting || [];
+  if (!shots.length && !Object.keys(bible).length) return "";
+  const line = (k, x) => x ? `<br><span class="dim">${k}: ${esc(typeof x === "string" ? x : (x || []).map(c => `${c.continuity_id || ""} ${c.description || ""}`).join("; "))}</span>` : "";
+  const world = Object.keys(bible).length ? `<p><span class="k">One continuous world</span>` + line("Set", bible.set_location) + line("People", bible.characters) +
+    line("Light", bible.lighting) + line("Colour", bible.colour_grade) + line("Camera", bible.camera_language) + line("Voice", bible.voice) + line("Product", bible.product) + `</p>` : "";
+  return fold("shoot-" + v.id, "DIRECTIONS · BEAT BY BEAT", world + shots.map(x => {
+    const d = x.directions || {};
+    return `<p><span class="k">Scene ${esc(x.scene_number)}</span>` + line("Opens on", x.entry_frame) + line("Shot", [d.shot_type, d.camera_movement, d.lens].filter(Boolean).join(", ")) +
+      line("Light", d.lighting) + line("Sound", d.sound) + `</p>` +
+      (x.beats || []).map(b => `<p><span class="k">${esc(b.time_range)}</span><br>${esc(b.action)}<br><span class="dim">${esc(b.camera)} · ${esc(b.emotion)}</span>` +
+        (b.narration ? `<br><span class="dim">Voice: ${esc(b.narration)}${b.delivery ? " (" + esc(b.delivery) + ")" : ""}</span>` : "") + `</p>`).join("") +
+      `<p>` + line("Closes on", x.exit_frame).slice(4) + `</p>`;
+  }).join(""));
+}
+function checksFold(v) {         // who wrote it and what the editor and the rule gates found
+  const sc = v.script || {}, e = sc.engine, g = sc.gates || {};
+  if (!e) return "";
+  if (!e.run_id) return `<p class="dim">Written by the backup writer: the script engine could not finish (${esc(e.why || "")}).</p>`;
+  const qa = Object.entries(sc.qa_summary || {}).map(([k, x]) => `${esc(k.replace(/_qa$/, "").replace(/_/g, " "))}: ${esc(x)}`).join(" · ");
+  const gate = (name, x) => x && x.verdict ? `<br><span class="dim">${name}: ${esc(String(x.verdict).replace(/_/g, " ").toLowerCase())}${x.reason ? " · " + esc(x.reason) : ""}</span>` : "";
+  const figs = (g.untraced_figures || []).length ? `<p style="color:var(--pink)">Check these figures before approving, they are not in the knowledge: ${esc(g.untraced_figures.join(", "))}</p>` : "";
+  const notes = (g.notes || []).map(n => `<p style="color:var(--pink)">${esc(n)}</p>`).join("");
+  return notes + fold("checks-" + v.id, `CHECKS · 3 AGENTS, 3 RULE GATES · ${esc(Math.round((e.seconds || 0) / 60))} MIN`,
+    `<p><span class="k">Written by</span><br>${esc(e.name)}<br><span class="dim">${esc(e.model)}${e.revised_for_brand ? " · sent back once by the brand check" : e.revised_by ? " · rewritten once as you asked" : ""}` +
+      `${e.locked ? " · locked " + esc(String(e.locked).slice(0, 12)) : " · waiting for your approval"}</span></p>` +
+    `<p><span class="k">Editor's checks</span><br><span class="dim">${qa}</span>` + gate("Hook is new", g.hook) + gate("Timing, beats and frames", g.production) + gate("Human voice", g.voice) + `</p>` + figs +
+    (sc.issues || []).map(i => `<p><span class="k">${esc(i.severity)} · ${esc(i.category)}</span><br>${esc(i.description)}<br><span class="dim">${esc(i.resolution)}</span></p>`).join(""));
+}
+const asking = {};               // "script-3" or "book-3" → the change being asked for, while its box is open
+function askForm(key, what) {    // a box to say what should change, and the two buttons under it
+  return `<div class="ask" style="width:100%"><textarea rows="2" data-ask-text="${key}" aria-label="What should change in ${what}" ` +
+    `placeholder="What should change in ${what}? One or two sentences.">${esc(asking[key])}</textarea>` +
+    `<div class="row"><button class="btn go" data-send-ask="${key}">SEND TO THE AGENT</button><button class="btn no" data-cancel-ask="${key}">CANCEL</button></div></div>`;
+}
+function lookbookFold(v) {       // agent 4's lookbook: what the film should look like, shown as the engine made it
+  const b = (v.script || {}).lookbook;
+  if (!b) return "";
+  const approved = b.status === "APPROVED";
+  const swatches = (b.palette || []).map(c => `<span class="sw" style="background:${/^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : "#000"}" title="${esc(c.name)} ${esc(c.hex)}"></span>`).join("");
+  return (b.notes || []).map(n => `<p style="color:var(--pink)">Lookbook: ${esc(n)}</p>`).join("") +
+    fold("book-" + v.id, `LOOKBOOK · VERSION ${esc(b.version)} · ${esc(b.keyframes)} KEYFRAMES${approved ? " · APPROVED" : ""}`,
+      `<p>${esc(b.one_line_story)}</p><p>${swatches}<span class="dim">${esc((b.mood_words || []).join(" · "))}</span></p>` +
+      (approved ? `<p class="dim">Approved${b.decided_by ? " by " + esc(b.decided_by) : ""} · fingerprint ${esc(String(b.approved_hash || "").slice(0, 12))}</p>` : "") +
+      (b.made_by && b.made_by !== ((v.script.engine || {}).model) ? `<p class="dim">Drawn up by the ${esc(b.made_by)}.</p>` : "") +
+      `<iframe class="book" title="Lookbook" loading="lazy" src="/api/videos/${v.id}/files/lookbook.html?v=${esc(String(b.hash || "").slice(0, 10))}"></iframe>` +
+      `<div class="row"><a class="btn" target="_blank" rel="noopener" href="/api/videos/${v.id}/files/lookbook.html">OPEN THE LOOKBOOK FULL SIZE</a></div>`,
+      v.status === "lookbook_ready");
+}
+function packageFold(v) {        // agent 5's work: the prompt for every scene, and the edit sheet
+  const k = (v.script || {}).package;
+  if (!k) return "";
+  const file = (name, label) => `<a class="btn" href="/api/videos/${v.id}/files/${name}" download>${label}</a>`;
+  return fold("prompts-" + v.id, `VIDEO PROMPTS · ${esc((k.scene_prompts || []).length)} SCENE${(k.scene_prompts || []).length === 1 ? "" : "S"}`,
+      (k.scene_prompts || []).map(x => `<pre class="prompt">${esc(x.prompt_text)}</pre>`).join("") + `<div class="row">${file("video-prompts.md", "DOWNLOAD THE PROMPTS")}</div>`) +
+    fold("sheet-" + v.id, "EDIT SHEET", `<div class="md">${md(k.edit_sheet_md || "")}</div><div class="row">${file("edit-sheet.md", "DOWNLOAD THE EDIT SHEET")}</div>`);
+}
+function videoCard(v) {
+  const sc = v.script || {}, s = sc.final_script, plan = sc.higgsfield, vids = v.video_urls || [];
+  const engine = (sc.engine || {}).run_id, book = sc.lookbook || {}, steps = engine ? 4 : 2;
+  const vid = vids.length ? `<video class="out" src="${esc(vids[0])}" controls preload="metadata"></video>` : "";
+  const working = '<span class="pill amber">WORKING</span>';
+  const state = {writing: working, lookbook: working, prompting: working, generating: working,
+    script_ready: '<span class="pill cyan">SCRIPT READY · YOUR APPROVAL</span>', lookbook_ready: '<span class="pill cyan">LOOKBOOK READY · YOUR APPROVAL</span>',
+    package_ready: '<span class="pill mint">PRODUCTION PACKAGE COMPLETE</span>', ready: '<span class="pill mint">READY</span>', failed: '<span class="pill pink">FAILED</span>'}[v.status] || "";
+  const busy = v.status === "writing" ? progress(v.started_at, 330, `Step 1 of ${steps} · ` + esc(sc.stage || "Writing the script"))
+    : v.status === "lookbook" ? progress(v.started_at, 150, "Step 2 of 4 · " + esc(sc.stage || "Agent 4 is drawing up the lookbook"))
+    : v.status === "prompting" ? progress(v.started_at, 130, "Step 3 of 4 · " + esc(sc.stage || "Agent 5 is writing the video prompts"))
+    : v.status === "generating" ? progress(v.started_at, 420, `Step ${steps} of ${steps} · Higgsfield is making the video`) : "";
+  let body = "";
+  if (s) {
+    body = `<p><span class="k">Hook</span><br>${esc((s.hook || {}).hook_text)}</p>` +
+      fold("script-" + v.id, `SCRIPT · ${esc(s.estimated_duration_seconds || s.target_duration_seconds)}s · ${esc(s.total_word_count)} WORDS`,
+        (s.scenes || []).map(x => `<p><span class="k">Scene ${esc(x.scene_number)} · ${esc(x.time_range)}</span><br>${esc(x.narration)}<br><span class="dim">${esc(x.visual_direction)}</span>` +
+          (x.on_screen_text ? `<br><span class="dim">On screen: ${esc(x.on_screen_text)}</span>` : "") + voiceLine(x.voice_direction) + `</p>`).join("") +
+        `<p><span class="k">Call to action</span><br>${esc((s.call_to_action || {}).cta_text)}</p>`, v.status === "script_ready") +
+      shootingFold(v) + checksFold(v) + lookbookFold(v) + packageFold(v) +
+      (plan ? fold("plan-" + v.id, `HIGGSFIELD PROMPT · ${esc(plan.duration)}s · ${esc(plan.resolution)} · ${esc(plan.aspect_ratio)}`, `<p class="dim">${esc(plan.prompt)}</p>`) : "");
+  }
+  const canGen = s && !busy && (engine ? !!plan : true) && !["lookbook_ready"].includes(v.status);
+  const q = quotes[v.id];
+  const free = '<span class="dim">Nothing is spent on Higgsfield at this step.</span>';
+  let btn = "";
+  if (engine && !busy && v.status === "script_ready") {            // the script waits for a person
+    btn = asking["script-" + v.id] !== undefined ? askForm("script-" + v.id, "the script")
+      : `<button class="btn go" data-approve-script="${v.id}">APPROVE SCRIPT · MAKE THE LOOKBOOK</button>` +
+        (sc.engine.revisions_left === 0 ? "" : `<button class="btn" data-ask="script-${v.id}">ASK FOR CHANGES</button>`) + free;
+  } else if (engine && !busy && v.status === "lookbook_ready") {   // the lookbook waits for a person
+    btn = asking["book-" + v.id] !== undefined ? askForm("book-" + v.id, "the lookbook")
+      : book.status === "APPROVED" ? `<button class="btn go" data-book="${v.id}">WRITE THE VIDEO PROMPTS AGAIN</button>` + free
+      : `<button class="btn go" data-book="${v.id}">APPROVE LOOKBOOK · WRITE THE VIDEO PROMPTS</button>` +
+        (book.changes_left === 0 ? "" : `<button class="btn" data-ask="book-${v.id}">ASK FOR CHANGES</button>`) + free;
+  }
+  else if (canGen && !hfConnected) btn = '<span class="dim">Connect Higgsfield to make the video.</span>';
+  else if (canGen && q === "loading") btn = '<span class="dim"><span class="spin"></span>Preparing the Higgsfield prompt and checking prices…</span>';
+  else if (canGen && q) btn = `<span class="dim">Choose a length. You have ${esc(Math.round(q.balance))} credits.</span>` +
+    q.options.map(o => `<button class="btn ${o.credits > q.balance ? "no" : "go"}" ${o.credits > q.balance ? "disabled" : ""} data-make-video="${v.id}" data-d="${o.duration}" data-r="${o.resolution}">` +
+      `${o.duration}s · ${esc(o.resolution)} · ${esc(o.credits)} credits</button>`).join("") + `<button class="btn no" data-cancel-quote="${v.id}">CANCEL</button>`;
+  else if (canGen) btn = `<button class="btn go" data-quote-video="${v.id}">${vid ? "MAKE THE VIDEO AGAIN" : engine ? "SEE PRICE · MAKE THE VIDEO" : "APPROVE SCRIPT · SEE PRICE"}</button><span class="dim">Nothing is spent until you pick a length.</span>`;
+  const links = !busy && vid ? `<div class="row">${hfLink((v.remote_urls || [])[0])}<a class="btn" href="${esc(vids[0])}" download>DOWNLOAD</a></div>` : "";
+  return `<article class="card"><div class="row"><h4>${esc((s && s.title) || v.idea_title)}</h4>${state}</div>${busy}${vid}` +
+    (v.error ? `<p class="dim" style="color:var(--pink)">${esc(v.error)}</p>` : "") + links + body + `<div class="row">${btn}</div></article>`;
+}
+async function loadContent() {
+  const d = await api("/api/content");
+  const active = d.in_progress.length + d.creatives.filter(c => ["writing", "generating"].includes(c.status)).length +
+    d.videos.filter(v => ["writing", "lookbook", "prompting", "generating"].includes(v.status)).length;
+  busyContent = active > 0;
+  $("n-content").textContent = active ? active + " in progress" : "";
+  if (editing($("content"))) return;                // someone is changing the words of a creative
+  if (!Object.keys(kinds.formats).length) kinds = (await api("/api/ideas/latest")).creative || kinds;
+  const making = d.in_progress.filter(i => i.type === "blog").map(i => `<div class="card"><p><b>${esc(i.title)}</b></p>${progress("", 240, "Writing the blog · about 4 minutes")}</div>`);
+  setHTML($("blogs"), making.join("") + (d.blogs.map(b =>
+    `<article class="card"><div class="row"><h4>${esc(b.title)}</h4><span class="pill mint">READY</span><span class="dim">${b.body_md.split(/\s+/).length} words</span>` +
+    `<button class="btn" data-copy="${b.id}" style="margin-left:auto">COPY</button></div><p class="dim">${esc(b.meta_description)}</p>` +
+    fold("blog-" + b.id, "READ THE BLOG", `<div class="md" id="blog-${b.id}">${md(b.body_md)}</div>`) + `</article>`).join("") ||
+    (making.length ? "" : '<div class="empty">No blogs yet. Approve a blog idea to get one.</div>')));
+  window._blogs = Object.fromEntries(d.blogs.map(b => [b.id, b.body_md]));
+  setHTML($("creatives"), d.creatives.map(creativeCard).join("") || '<div class="empty">No creatives yet. Approve a creative idea to get one.</div>');
+  if (![...$("videos").querySelectorAll("video")].some(v => !v.paused && !v.ended))    // do not interrupt a playing video
+    setHTML($("videos"), d.videos.map(videoCard).join("") || '<div class="empty">No videos yet. Approve a video idea to get a script.</div>');
+  tick();
+}
+$("content").addEventListener("input", onWords);
+$("content").addEventListener("input", e => { const k = e.target.dataset.askText; if (k) asking[k] = e.target.value; });
+$("content").addEventListener("click", e => {
+  const c = e.target.closest("[data-gen-creative]"), rc = e.target.closest("[data-regen-creative]"), cp = e.target.closest("[data-copy]");
+  if (c) act(() => api(`/api/creatives/${c.dataset.genCreative}/generate`, {}), "Higgsfield is making the image. About two minutes.");
+  if (rc) { const id = rc.dataset.regenCreative, words = drafts["creative-" + id];
+    if (words && !words.headline.trim()) return toast("Write a headline first.");
+    opened.delete("again-" + id);
+    act(() => api(`/api/creatives/${id}/generate`, words ? {brief: words} : {}), "Making it again with your words. About two minutes."); }
+  const qv = e.target.closest("[data-quote-video]"), mk = e.target.closest("[data-make-video]"), cq = e.target.closest("[data-cancel-quote]");
+  if (qv) { const id = qv.dataset.quoteVideo; quotes[id] = "loading"; loadContent();
+    api(`/api/videos/${id}/quote`, {}).then(q => { quotes[id] = q; }, err => { delete quotes[id]; toast(err.message); }).finally(loadContent); }
+  if (cq) { delete quotes[cq.dataset.cancelQuote]; loadContent(); }
+  if (mk) { const id = mk.dataset.makeVideo; delete quotes[id];
+    act(() => api(`/api/videos/${id}/generate`, {duration: +mk.dataset.d, resolution: mk.dataset.r}), "Generating the video on Higgsfield. This can take several minutes."); }
+  const ap = e.target.closest("[data-approve-script]"), bk = e.target.closest("[data-book]"), ask = e.target.closest("[data-ask]"),
+    send = e.target.closest("[data-send-ask]"), stop = e.target.closest("[data-cancel-ask]");
+  if (ap) act(() => api(`/api/videos/${ap.dataset.approveScript}/approve-script`, {}), "Script locked. Agent 4 is drawing up the lookbook. About two minutes.");
+  if (bk) act(() => api(`/api/videos/${bk.dataset.book}/lookbook/decision`, {decision: "APPROVE"}), "Lookbook approved. Agent 5 is writing the video prompts. About two minutes.");
+  if (ask) { asking[ask.dataset.ask] = ""; loadContent(); }
+  if (stop) { delete asking[stop.dataset.cancelAsk]; loadContent(); }
+  if (send) { const key = send.dataset.sendAsk, [what, id] = key.split("-"), text = (asking[key] || "").trim();
+    if (text.length < 8) return toast("Say what should change, in a sentence.");
+    act(() => (what === "script" ? api(`/api/videos/${id}/script-changes`, {feedback: text})
+        : api(`/api/videos/${id}/lookbook/decision`, {decision: "REQUEST_CHANGES", feedback: text})).then(r => { delete asking[key]; return r; }),
+      what === "script" ? "The agents are rewriting the script. A few minutes." : "Agent 4 is redrawing the lookbook. About two minutes."); }
+  if (cp) navigator.clipboard.writeText(window._blogs[cp.dataset.copy] || "").then(() => toast("Blog copied."), () => toast("Copy was blocked. Open the blog and select the text."));
+});
+
+// ---------------- Approvals ----------------
+async function loadHeld() {
+  if ($("held").querySelector("textarea")) return;        // someone is editing an item
+  const items = await api("/api/review");
+  setHTML($("held"), items.slice(0, 60).map(i => {
+    const decided = i.manager_note ? `<span class="pill ${i.manager_note.startsWith("reject") ? "pink" : "mint"}">${esc(i.manager_note.split(":")[0].toUpperCase())}</span>` : "";
+    return `<article class="card"><div class="row"><span class="pill">${esc(i.kind)}</span>${decided}</div><p>${esc(i.edited_content || i.content)}</p>` +
+      `<p class="dim"><span class="k">Why it is held</span><br>${esc(i.rule)}${i.affects ? " · affects: " + esc(i.affects) : ""}</p>` +
+      `<p class="src">${(i.source_urls || []).map(u => `<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</p>` +
+      `<div class="row"><button class="btn go" data-dec="approve" data-id="${i.id}">APPROVE</button><button class="btn warn" data-dec="reject" data-id="${i.id}">REJECT</button>` +
+      `<button class="btn" data-dec="edit" data-id="${i.id}">EDIT AND APPROVE</button></div></article>`;
+  }).join("") + (items.length > 60 ? `<p class="dim">Showing 60 of ${items.length}. Decide on these and finalise to see the rest.</p>` : "") ||
+    '<div class="empty">Nothing is waiting. Doubtful learnings will appear here.</div>');
+}
+$("held").addEventListener("click", e => {
+  const b = e.target.closest("[data-dec]"); if (!b) return;
+  const card = b.closest(".card");
+  if (b.dataset.dec === "edit" && !card.querySelector("textarea")) {
+    const ta = document.createElement("textarea"); ta.value = card.querySelector("p").textContent; ta.setAttribute("aria-label", "Edited learning");
+    card.insertBefore(ta, card.querySelector(".dim")); b.textContent = "SAVE EDIT"; ta.focus(); return;
+  }
+  const ta = card.querySelector("textarea");
+  act(() => api(`/api/review/item/${b.dataset.id}`, {action: b.dataset.dec, content: ta ? ta.value : null}));
+});
+$("fin-review").addEventListener("click", () => act(async () => {
+  const r = await api("/api/review/finalise", {});
+  toast(`Review finalised: ${r.approved} approved, ${r.edited} edited, ${r.rejected} rejected, ${r.added} added.`);
+}));
+document.querySelectorAll("[data-rule]").forEach(b => b.addEventListener("click", () => {
+  const v = $("rule-text").value.trim();
+  if (!v) return toast("Type the fact or the rule first.");
+  act(() => api("/api/review/rule", {kind: b.dataset.rule, content: v}), b.dataset.rule === "never_use" ? "Noted. MAGI will not use it." : "Added to the knowledge base.");
+  $("rule-text").value = "";
+}));
+
+// ---------------- Crawler ----------------
+const fmt = t => t ? new Date(t).toLocaleString("en-IN", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "-";
+async function loadCrawler() {
+  const [runs, learned, sources] = await Promise.all([api("/api/crawl/runs"), api("/api/learnings?limit=30"), api("/api/sources")]);
+  $("runs").innerHTML = "<tr><th>Started</th><th>Ended</th><th>Status</th><th>Pages read</th><th>Kept</th><th>New sites</th><th>Searches</th></tr>" +
+    runs.map(r => { const s = r.stats || {}; return `<tr><td>${fmt(r.started_at)}</td><td>${fmt(r.ended_at)}</td><td>${esc(r.status)}</td><td>${s.pages_seen ?? "-"}</td><td>${s.pages_kept ?? "-"}</td><td>${s.new_sources ?? "-"}</td><td>${s.searches ?? "-"}</td></tr>`; }).join("");
+  setHTML($("learned"), learned.map(l => `<div class="card"><div class="row"><span class="pill cyan">${esc(l.kind)}</span><span class="dim">${fmt(l.created_at)}</span></div>` +
+    `<p>${esc(l.content)}</p><p class="src">${(l.source_urls || []).slice(0, 2).map(u => `<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</p></div>`).join("") ||
+    '<div class="empty">Nothing learned yet.</div>');
+  $("sources").innerHTML = "<tr><th>Site</th><th>Type</th><th>Status</th><th>Relevance</th><th></th></tr>" + sources.slice(0, 80).map(s =>
+    `<tr><td>${esc(s.domain || s.url)}</td><td>${esc(s.kind)}</td><td>${esc(s.status)}</td><td>${esc(s.score)}</td>` +
+    `<td><button class="btn" data-src="${s.id}" data-st="trusted">TRUST</button> <button class="btn warn" data-src="${s.id}" data-st="blocked">BLOCK</button></td></tr>`).join("");
+}
+$("sources").addEventListener("click", e => { const b = e.target.closest("[data-src]"); if (b) act(() => api(`/api/sources/${b.dataset.src}`, {status: b.dataset.st}), "Updated."); });
+$("c-start").addEventListener("click", () => act(() => api("/api/crawl/start", {}), "Crawler started. It runs until 8 AM."));
+$("c-stop").addEventListener("click", () => act(() => api("/api/crawl/stop", {}), "Crawler stopping."));
+$("link-add").addEventListener("click", () => {
+  const v = $("link").value.trim();
+  if (!/^https?:\/\/\S+\.\S+/.test(v)) return toast("Paste a full link starting with https://");
+  act(() => api("/api/inspiration", {url: v}), "Added. It will be read first on the next crawl."); $("link").value = "";
+});
+
+// ---------------- Alerts (Chrome notifications) ----------------
+let seenNote = 0;
+try { seenNote = +localStorage.getItem("mai-note") || 0; } catch (_) {}
+if ("Notification" in window && Notification.permission === "default") {
+  $("alerts").hidden = false;
+  $("alerts").addEventListener("click", async () => { if (await Notification.requestPermission() === "granted") { $("alerts").hidden = true; toast("Alerts are on."); } });
+}
+async function loadNotes() {
+  const notes = await api("/api/notifications?unread=true");
+  for (const n of notes.reverse()) {
+    if (n.id <= seenNote) continue;
+    seenNote = n.id; try { localStorage.setItem("mai-note", seenNote); } catch (_) {}
+    toast(n.title + (n.body ? " · " + n.body : ""));
+    if ("Notification" in window && Notification.permission === "granted") new Notification("MAGI: " + n.title, {body: n.body || ""});
+  }
+}
+
+if (!["localhost", "127.0.0.1"].includes(location.hostname)) {
+  $("logout").hidden = false;
+  $("logout").addEventListener("click", async () => { await fetch("/api/logout", {method: "POST"}); location.href = "/login"; });
+}
+
+// ---------------- Refresh loop ----------------
+async function refreshAll() {
+  loadHf().then(changed => { if (changed) refreshAll(); }, () => {});   // slow, so the page does not wait for it; the cards say what Approve will make
+  const jobs = [loadStatus()];
+  if (!$("ideas").hidden) jobs.push(loadIdeas());
+  if (!$("content").hidden) jobs.push(loadContent());
+  if (!$("approvals").hidden) jobs.push(loadHeld());
+  if (!$("crawler").hidden) jobs.push(loadCrawler());
+  jobs.push(loadNotes());
+  const res = await Promise.allSettled(jobs);
+  if (res[0].status === "rejected") $("stats").textContent = "server not reachable · the connection to the server has dropped";
+}
+addEventListener("focus", () => loadHf(true).then(changed => { if (changed) refreshAll(); }, () => {}));   // back from the Higgsfield login tab
+if (window.top !== window) document.querySelectorAll(".solo").forEach(e => e.style.display = "none");   // shown inside MAGI, which has its own
+addEventListener("hashchange", () => { const t = location.hash.slice(1); if (tabs.includes(t) && $(t).hidden) show(t); });
+const start = location.hash.slice(1);
+show(tabs.includes(start) ? start : "ideas");
+setInterval(() => { if (document.visibilityState === "visible") refreshAll(); }, 7000);
+
+// Inside MAGI, the space bar switches her microphone on and off (unless something is being typed or pressed).
+if (window.parent !== window) addEventListener("keydown", e => {
+  const el = document.activeElement;
+  if (e.code !== "Space" || e.repeat || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (el && (/^(INPUT|TEXTAREA|SELECT|BUTTON|A|SUMMARY)$/.test(el.tagName) || el.isContentEditable)) return;
+  e.preventDefault();
+  window.parent.postMessage("magi-mic", location.origin);
+});
+</script>
+</body>
+</html>

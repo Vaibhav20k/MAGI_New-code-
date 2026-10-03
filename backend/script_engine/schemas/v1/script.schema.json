@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Script",
+  "type": "object",
+  "required": [
+    "script_id",
+    "request_id",
+    "title",
+    "format",
+    "target_duration_seconds",
+    "estimated_duration_seconds",
+    "total_word_count",
+    "hook",
+    "narrative_arc",
+    "scenes",
+    "call_to_action",
+    "self_critique_log"
+  ],
+  "properties": {
+    "script_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "title": { "type": "string" },
+    "format": {
+      "type": "string",
+      "enum": ["short-form", "mid-form", "long-form"]
+    },
+    "target_duration_seconds": { "type": "integer" },
+    "estimated_duration_seconds": { "type": "integer" },
+    "total_word_count": { "type": "integer" },
+    "hook": {
+      "type": "object",
+      "required": ["hook_text", "duration_seconds", "visual_cue"],
+      "properties": {
+        "hook_text": { "type": "string" },
+        "duration_seconds": { "type": "integer" },
+        "visual_cue": { "type": "string" }
+      }
+    },
+    "narrative_arc": {
+      "type": "object",
+      "required": [
+        "stage_1_ancient_wisdom",
+        "stage_2_discovery_tension",
+        "stage_3_scientific_decode",
+        "stage_4_modern_tech_bridge",
+        "stage_5_magppie_translation",
+        "stage_6_better_living_payoff"
+      ],
+      "properties": {
+        "stage_1_ancient_wisdom": { "type": "string" },
+        "stage_2_discovery_tension": { "type": "string" },
+        "stage_3_scientific_decode": { "type": "string" },
+        "stage_4_modern_tech_bridge": { "type": "string" },
+        "stage_5_magppie_translation": { "type": "string" },
+        "stage_6_better_living_payoff": { "type": "string" }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scene_number", "time_range", "visual_direction", "narration", "on_screen_text", "audio_cues"],
+        "properties": {
+          "scene_number": { "type": "integer" },
+          "time_range": { "type": "string" },
+          "visual_direction": { "type": "string" },
+          "narration": { "type": "string" },
+          "on_screen_text": { "type": "string" },
+          "audio_cues": { "type": "string" }
+        }
+      }
+    },
+    "call_to_action": {
+      "type": "object",
+      "required": ["cta_text", "cta_type"],
+      "properties": {
+        "cta_text": { "type": "string" },
+        "cta_type": { "type": "string" }
+      }
+    },
+    "self_critique_log": {
+      "type": "object",
+      "required": [
+        "hook_evaluation",
+        "factual_consistency_score",
+        "brand_voice_compliance",
+        "product_truth_check",
+        "internal_revisions_made"
+      ],
+      "properties": {
+        "hook_evaluation": { "type": "string" },
+        "factual_consistency_score": { "type": "string" },
+        "brand_voice_compliance": { "type": "string" },
+        "product_truth_check": { "type": "string" },
+        "internal_revisions_made": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": false
+}

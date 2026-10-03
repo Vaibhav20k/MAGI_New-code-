@@ -1,0 +1,62 @@
+# Cognee AI memory engine — add-on service.
+# Start (does not touch the other services):
+#   sudo docker compose -f docker-compose.yml -f docker-compose.cognee.yml up -d --build --no-deps cognee
+# Internal URL for other containers: http://cognee:8100
+
+services:
+  cognee:
+    build: ./services/cognee
+    restart: unless-stopped
+    env_file: .env
+    environment:      # these win over the values in .env (which target another host)
+      # LLM (Gemini via LiteLLM; the "gemini/" prefix is required)
+      - LLM_PROVIDER=gemini
+      - LLM_MODEL=gemini/gemini-3.1-flash-lite     # its own model, so it never uses up MAI chat's allowance
+      - LLM_API_KEY=${GEMINI_API_KEY}
+      - LLM_RATE_LIMIT_ENABLED=true
+      # 1 request per 10 s = 6 a minute, gentle enough for the free plan
+      - LLM_RATE_LIMIT_REQUESTS=1
+      - LLM_RATE_LIMIT_INTERVAL=10
+      # Embeddings run locally (no API calls)
+      - EMBEDDING_PROVIDER=fastembed
+      - EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+      - EMBEDDING_DIMENSIONS=384
+      - FASTEMBED_CACHE_PATH=/data/fastembed_cache
+      # Relational + vector store: the cognee_db database on the db service
+      - DB_PROVIDER=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=cognee_db
+      - VECTOR_DB_PROVIDER=pgvector
+      - VECTOR_DB_HOST=db
+      - VECTOR_DB_PORT=5432
+      - VECTOR_DB_USERNAME=postgres
+      - VECTOR_DB_PASSWORD=${DB_PASSWORD}
+      - VECTOR_DB_NAME=cognee_db
+      # Graph store: embedded file database under SYSTEM_ROOT_DIRECTORY (on the volume)
+      - SYSTEM_ROOT_DIRECTORY=/data/cognee_system
+      - DATA_ROOT_DIRECTORY=/data/cognee_data
+      - ENABLE_BACKEND_ACCESS_CONTROL=false
+      - TELEMETRY_DISABLED=1
+      # Keep LLM usage low: no session memory / feedback calls, no connection probe per run
+      - CACHING=false
+      - AUTO_FEEDBACK=false
+      - COGNEE_SKIP_CONNECTION_TEST=true
+      # Service tuning
+      - COGNIFY_CHUNKS_PER_BATCH=4
+      - COGNIFY_DATA_PER_BATCH=2
+    volumes:
+      - cognee-data:/data
+    ports:
+      - "127.0.0.1:8100:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 6s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  cognee-data:
