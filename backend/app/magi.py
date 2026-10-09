@@ -151,6 +151,28 @@ async def magi_map():
             "marketing": await _marketing(), "tools": TOOLS}
 
 
+@router.get("/team")
+async def magi_team():
+    """What each role of the marketing department is doing now. The office on the home screen follows this."""
+    from .agents import crawler
+    from .team import team_state
+    c = await db.fetchrow("""select
+        (select count(*) from pages where kept and not processed) pages_to_learn,
+        (select count(*) from learnings where status = 'held') held,
+        (select status from idea_batches order by id desc limit 1) idea_run,
+        (select count(*) from ideas where status = 'proposed') ideas_proposed,
+        (select count(*) from ideas where status = 'finalising' and type = 'blog') blogs_writing,
+        (select count(*) from creatives where status in ('writing','generating')) creatives_making,
+        (select count(*) from creatives where status = 'brief_ready') creatives_ready,
+        (select count(*) from videos where status in ('writing','lookbook','prompting','generating')) videos_making,
+        (select count(*) from videos where status in ('script_ready','lookbook_ready','package_ready')) videos_to_approve,
+        (select script->>'stage' from videos where status in ('writing','lookbook','prompting','generating')
+         order by id desc limit 1) video_stage""")
+    crawling = bool(crawler.state["run_id"])
+    run = await db.fetchrow("select stats from crawl_runs order by id desc limit 1") if crawling else None
+    return {"roles": team_state(dict(c), crawling, (run or {}).get("stats"), c["video_stage"])}
+
+
 @router.post("/drop")
 async def magi_drop(file: UploadFile):
     """A document dropped on the brain joins the knowledge, as something a person on the team added."""
