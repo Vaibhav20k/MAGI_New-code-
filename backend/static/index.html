@@ -281,6 +281,17 @@ async function loadHf(force) {              // resolves to true when the connect
 const TYPE = {blog: "Blog ideas", creative: "Creative ideas", video: "Video ideas"};
 const MAKES = {blog: "the full blog", creative: hf => hf ? `the finished image${kinds.credits_each ? " · " + kinds.credits_each + " credits" : ""}` : "the brief (connect Higgsfield for the image)", video: "the script, then you approve the video"};
 let kinds = {formats: {}, credits_each: null};      // story / poster / post, from the house styles
+let vtypes = {default: "", types: []};               // the kinds of video, from inputs/video-types.json
+const vchoice = {};                                  // idea id -> the video type chosen on its card
+const vlabel = k => ((vtypes.types.find(t => t.key === k) || {}).label || k || "");
+function typePicker(i, p) {                          // the video type of an idea, suggested by the Strategist
+  const cur = vchoice[i.id] || p.video_type || vtypes.default, t = vtypes.types.find(x => x.key === cur) || {};
+  const opts = vtypes.types.map(x => `<option value="${esc(x.key)}"${x.key === cur ? " selected" : ""}${x.generate ? "" : " disabled"}>` +
+    `${esc(x.label)}${x.key === p.video_type ? " · suggested" : ""}${x.generate ? "" : " · needs your footage"}</option>`).join("");
+  return `<label class="f"><span class="k">Video type</span><select data-vtype="${i.id}">${opts}</select>` +
+    `<span class="dim">${esc(cur === p.video_type && p.type_reason ? "Why: " + p.type_reason : t.best_for || "")}` +
+    `${t.reach ? " · Likely reach: " + esc(t.reach) : ""}</span></label>`;
+}
 const drafts = {};                                  // "idea-7" or "creative-3" → the words as edited on the card
 const WORDS = ["format", "headline", "highlight", "supporting_line", "visual", "bottom_line"];
 const editing = el => el.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
@@ -343,6 +354,8 @@ function ideaCard(i) {
   let brief = "";
   if (i.type === "creative" && open) brief = `<p class="k">Brief · change anything before you approve</p>` + wordsForm("idea-" + i.id, draftFor("idea-" + i.id, p), true);
   else if (i.type === "creative") brief = `<p class="dim"><span class="k">${esc((kinds.formats[p.format] || {}).label || "Creative")}</span><br>${esc(p.headline)}${p.supporting_line ? "<br>" + esc(p.supporting_line) : ""}</p>`;
+  if (i.type === "video" && open && vtypes.types.length) brief = `<div class="words">${typePicker(i, p)}</div>`;
+  else if (i.type === "video" && p.video_type) brief = `<p class="dim"><span class="k">Video type</span><br>${esc(vlabel(p.video_type))}</p>`;
   const buttons = open
     ? `<div class="row"><button class="btn go" data-approve="${i.id}" data-type="${esc(i.type)}" title="MAGI makes ${esc(what)}">APPROVE</button>` +
       `<button class="btn no" data-reject="${i.id}">SKIP</button><span class="dim">Approve makes ${esc(what)}</span></div>` : state;
@@ -355,6 +368,7 @@ let batchRunning = false;
 async function loadIdeas() {
   const d = await api("/api/ideas/latest");
   if (d.creative) kinds = d.creative;
+  if (d.video) vtypes = d.video;
   batchRunning = d.batch && d.batch.status === "running";
   $("crawl").disabled = batchRunning;
   $("crawl").innerHTML = batchRunning ? '<span class="spin"></span>FINDING IDEAS…' : "CRAWL · GET NEW IDEAS";
@@ -370,11 +384,18 @@ async function loadIdeas() {
 }
 $("crawl").addEventListener("click", () => act(() => api("/api/ideas/generate", {}), "Finding new ideas. About a minute."));
 $("idea-cols").addEventListener("input", onWords);
+$("idea-cols").addEventListener("change", e => {
+  const s = e.target.closest("[data-vtype]"); if (!s) return;
+  vchoice[s.dataset.vtype] = s.value;
+  const t = vtypes.types.find(x => x.key === s.value) || {};
+  s.parentElement.querySelector(".dim").textContent = (t.best_for || "") + (t.reach ? " · Likely reach: " + t.reach : "");
+});
 $("idea-cols").addEventListener("click", e => {
   const a = e.target.closest("[data-approve]"), r = e.target.closest("[data-reject]"), g = e.target.closest("[data-goto]");
   if (a) { const id = a.dataset.approve, words = a.dataset.type === "creative" ? drafts["idea-" + id] : null;
     if (words && !words.headline.trim()) return toast("Write a headline first.");
-    act(() => api(`/api/ideas/${id}/approve`, words ? {brief: words} : {}),
+    const body = words ? {brief: words} : a.dataset.type === "video" && vchoice[id] ? {video: {video_type: vchoice[id]}} : {};
+    act(() => api(`/api/ideas/${id}/approve`, body),
       a.dataset.type === "creative" && hfConnected ? "Approved. The image takes about two minutes. Watch it on the Content tab." : "Approved. MAGI is making it."); }
   if (r) act(() => api(`/api/ideas/${r.dataset.reject}/reject`, {}));
   if (g) show(g.dataset.goto);
@@ -535,7 +556,7 @@ function videoCard(v) {
       `${o.duration}s · ${esc(o.resolution)} · ${esc(o.credits)} credits</button>`).join("") + `<button class="btn no" data-cancel-quote="${v.id}">CANCEL</button>`;
   else if (canGen) btn = `<button class="btn go" data-quote-video="${v.id}">${vid ? "MAKE THE VIDEO AGAIN" : engine ? "SEE PRICE · MAKE THE VIDEO" : "APPROVE SCRIPT · SEE PRICE"}</button><span class="dim">Nothing is spent until you pick a length.</span>`;
   const links = !busy && vid ? `<div class="row">${hfLink((v.remote_urls || [])[0])}<a class="btn" href="${esc(vids[0])}" download>DOWNLOAD</a></div>` : "";
-  return `<article class="card"><div class="row"><h4>${esc((s && s.title) || v.idea_title)}</h4>${state}</div>${busy}${vid}` +
+  return `<article class="card"><div class="row"><h4>${esc((s && s.title) || v.idea_title)}</h4>${v.video_type ? `<span class="pill">${esc(vlabel(v.video_type)).toUpperCase()}</span>` : ""}${state}</div>${busy}${vid}` +
     (v.error ? `<p class="dim" style="color:var(--pink)">${esc(v.error)}</p>` : "") + links + body + `<div class="row">${btn}</div></article>`;
 }
 async function loadContent() {

@@ -26,7 +26,7 @@ from .voice import router as voice_router
 from . import auth, bloom, brand, cognee_sync, higgsfield, keys, media, quick, script_engine
 from .higgsfield import router as higgsfield_router
 from .magi import router as magi_router
-from . import references
+from . import references, video_types
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("mai")
@@ -337,6 +337,7 @@ async def _start(idea_ids: list[int]) -> list[int]:
 
 class Words(BaseModel):
     brief: dict | None = None        # the words and kind of a creative, as edited on the card
+    video: dict | None = None        # the type of a video, as chosen on the card
 
 
 @app.post("/api/ideas/{idea_id}/approve")
@@ -348,6 +349,13 @@ async def idea_approve(idea_id: int, w: Words | None = None):
             raise HTTPException(400, "The headline cannot be empty.")
         await db.execute("update ideas set payload = coalesce(payload, '{}'::jsonb) || %s where id = %s "
                          "and type = 'creative' and status in ('proposed','selected')", db.Jsonb(fields), idea_id)
+    if w and w.video and w.video.get("video_type"):
+        chosen = video_types.get(w.video["video_type"])
+        if chosen["key"] != w.video["video_type"]:
+            raise HTTPException(400, "That video type needs your own footage, so MAGI cannot make it yet.")
+        await db.execute("update ideas set payload = coalesce(payload, '{}'::jsonb) || %s where id = %s "
+                         "and type = 'video' and status in ('proposed','selected')",
+                         db.Jsonb({"video_type": chosen["key"]}), idea_id)
     started = await _start([idea_id])
     if not started:
         raise HTTPException(400, "This idea was already approved or set aside.")
@@ -556,7 +564,7 @@ async def content():
                                 "order by b.id desc limit 30"),
         "creatives": await db.fetch("select c.*, i.title idea_title from creatives c left join ideas i "
                                     "on i.id = c.idea_id order by c.id desc limit 30"),
-        "videos": await db.fetch("select v.*, i.title idea_title from videos v left join ideas i "
+        "videos": await db.fetch("select v.*, i.title idea_title, i.payload->>'video_type' video_type from videos v left join ideas i "
                                  "on i.id = v.idea_id order by v.id desc limit 30"),
         "in_progress": await db.fetch("select id, type, title from ideas where status = 'finalising'"),
     }
