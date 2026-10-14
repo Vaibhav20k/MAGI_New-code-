@@ -4,14 +4,15 @@ The words on the image (headline, coloured words, small line, bottom line) and t
 (story, poster, post) come from the idea card, where the user can edit them before approving, and are
 used exactly as approved. The agent adds the photograph description and the caption, grounded in the
 company knowledge. The layout comes from the house styles in inputs/creative-styles.json, which were
-taken from the company's own posters. Higgsfield renders the image with the text on it.
+taken from the company's own posters. Higgsfield renders the image with the text on it; the real logo is laid on
+afterwards (app/brandmark.py), in the place each format keeps empty for it.
 """
 
 import json
 import logging
 import re
 
-from .. import bloom, brand, db, kb, llm, media
+from .. import bloom, brand, brandmark, db, kb, llm, media
 from ..config import get_settings
 
 log = logging.getLogger("mai.creative")
@@ -57,7 +58,7 @@ def build_prompt(brief: dict) -> str:
     headline, highlight = _q(brief.get("headline")), _q(brief.get("highlight"))
     sub, bottom = _q(brief.get("supporting_line")), _q(brief.get("bottom_line")) or f["bottom_line"]
     parts = [f["layout"]]
-    if st.get("logo_media"):
+    if st.get("logo_media") and not st.get("logo_stamped"):
         parts.append(st["logo_note"])
     if f.get("reference_job"):
         parts.append(f["reference_note"])
@@ -166,7 +167,8 @@ async def generate(creative_id: int) -> bool:
                 "aspect_ratio": f["aspect_ratio"],
                 "quality": st["image"]["quality"], "resolution": st["image"]["resolution"]}
         # the logo and the layout reference go along as pictures; if Higgsfield refuses one, try with fewer
-        logo, ref = st.get("logo_media"), f.get("reference_job")
+        logo = None if st.get("logo_stamped") else st.get("logo_media")
+        ref = f.get("reference_job") if f.get("reference_job") not in (None, "None", "") else None
         tries = [[m for m in (logo, ref) if m]] + ([[logo]] if logo and ref else []) + ([[]] if logo or ref else [])
         for n, pics in enumerate(tries):
             try:
@@ -177,6 +179,11 @@ async def generate(creative_id: int) -> bool:
                 if refused.account or n == len(tries) - 1:        # a limit on the account: fewer pictures would not help
                     raise
                 log.warning("creative %s: Higgsfield refused a reference picture; trying with fewer", creative_id)
+        if st.get("logo_stamped") and f.get("logo_slot"):          # the real logo, laid where the format left room
+            try:
+                saved = [brandmark.stamp_media(u, f["logo_slot"]) for u in saved]
+            except Exception as e:  # noqa: BLE001 - keep the picture without the logo rather than lose it
+                log.warning("creative %s: the logo could not be added: %s", creative_id, e)
         await db.execute(
             "update creatives set image_urls = %s::text[] || image_urls, remote_urls = %s::text[] || remote_urls, "
             "job_ids = %s::text[] || job_ids, "

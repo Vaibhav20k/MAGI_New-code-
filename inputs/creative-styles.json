@@ -6,7 +6,7 @@
     "resolution": "1k",
     "credits_each": 1.5
   },
-  "rules": "Spell every quoted word exactly as written, once, with correct spacing. No other text anywhere beyond the quoted words. No dashes in any text. No numbered badges, borders, ornate gold frames, device frames or watermarks. No other brand names or logos. No people's faces. Any kitchen shown is built entirely from stone: stone cabinets, stone doors, stone drawers and stone surfaces. No wood and no steel cabinets anywhere. Minimal and calm: one idea, generous empty space.",
+  "rules": "Spell every quoted word exactly as written, once, with correct spacing. No other text anywhere beyond the quoted words. No dashes in any text. No numbered badges, borders, ornate gold frames, device frames or watermarks. Do not draw any logo, including the MAGPPIE logo: its place is left empty and the real logo is added afterwards. No other brand names. No people's faces. Any kitchen shown is built entirely from stone: stone cabinets, stone doors, stone drawers and stone surfaces. No wood and no steel cabinets anywhere. Minimal and calm: one idea, generous empty space.",
   "headline_examples": [
     "Stone Outlasts Everything.",
     "Built once. For generations.",
@@ -18,28 +18,30 @@
   ],
   "formats": {
     "story": {
+      "logo_slot": {"x": 0.5, "y": 0.8, "width": 0.34, "anchor": "center"},
       "label": "Story",
       "use": "Instagram or WhatsApp story, tall. Obsidian black card with one bold statement or question, a calm stone photo below.",
       "headline_hint": "a question or bold statement, 8 to 14 words",
       "aspect_ratio": "9:16",
       "reference_job": "b0c813b8-fb1e-4808-9e57-1f3ca3b36ff6",
-      "reference_note": "The attached reference image shows our house layout. Match only its layout and the position of the brand lockup at the bottom. Use the colours described here, not the reference's orange. Do not copy its photograph, its number badge, its rounded frame or any of its words.",
+      "reference_note": "The attached reference image shows our house layout. Match only its layout and the position of the brand lockup at the bottom, but leave the logo's place empty. Use the colours described here, not the reference's orange. Do not copy its photograph, its number badge, its rounded frame or any of its words.",
       "layout": "A finished vertical 9:16 social media story advertisement, ready to post. Solid obsidian black background, square corners, edge to edge, generous empty space.",
       "headline_style": "Top half, left aligned with generous margins: very large bold white clean sans-serif headline (Lato style), tight line spacing, broken over several short lines.",
       "highlight_style": "The words \"{highlight}\" are in copper (#C77B4A). Every other headline word is pure white.",
       "sub_style": "Directly under the headline: a smaller, light-weight silver-white sans-serif line.",
       "photo_style": "Lower middle of the frame: a dark, low-key, calm close-up photograph of dark engineered stone with one soft light source, fading smoothly into the black background on all sides.",
-      "footer": "Bottom, centred brand lockup: the MAGPPIE logo exactly as in the attached logo image, in white; under it \"WELLNESS KITCHEN\" in small copper (#C77B4A) capitals with wide letter spacing; under that \"{bottom_line}\" in small silver capitals with wide letter spacing.",
+      "footer": "Bottom, centred brand lockup: first an empty band of plain dark background, about one tenth of the image height, centred at 80 percent of the height, left completely empty because the real logo is added there afterwards; under it \"WELLNESS KITCHEN\" in small copper (#C77B4A) capitals with wide letter spacing; under that \"{bottom_line}\" in small silver capitals with wide letter spacing.",
       "bottom_line": "SCIENCE. NATURE. PURPOSE. WELLNESS."
     },
     "poster": {
+      "logo_slot": {"x": 0.06, "y": 0.045, "width": 0.24, "anchor": "top-left"},
       "label": "Poster",
       "use": "Print or showroom poster, minimal like an Apple ad. One full stone kitchen photo, one bold line, the store line at the bottom.",
       "headline_hint": "short and elegant, 4 to 7 words",
       "aspect_ratio": "2:3",
       "reference_job": null,
       "reference_note": "",
-      "layout": "A finished minimalist advertisement poster, portrait 2:3, ready to print, in the spirit of an Apple product poster. One full-bleed editorial interior photograph fills the whole poster; a soft dark gradient sits behind the text areas at the top left and along the bottom so all text is easy to read. Top left corner: the MAGPPIE logo exactly as in the attached logo image, in white. Generous empty space.",
+      "layout": "A finished minimalist advertisement poster, portrait 2:3, ready to print, in the spirit of an Apple product poster. One full-bleed editorial interior photograph fills the whole poster; a soft dark gradient sits behind the text areas at the top left and along the bottom so all text is easy to read. Top left corner: an empty area of plain dark background, about a quarter of the width, left completely empty because the real logo is added there afterwards. Generous empty space.",
       "headline_style": "Upper left, under the logo: one large bold white clean sans-serif headline (Lato style), set over two or three lines.",
       "highlight_style": "The words \"{highlight}\" are in copper (#C77B4A). Every other headline word is white.",
       "sub_style": "Under the headline: one line in small silver capital letters with very wide letter spacing.",
@@ -48,6 +50,7 @@
       "bottom_line": "New Delhi | Mohali | Mumbai | Surat | Hyderabad | Bengaluru | Coimbatore | @magppie_wellness"
     },
     "post": {
+      "logo_slot": {"x": 0.5, "y": 0.8, "width": 0.3, "anchor": "center"},
       "label": "Post with text",
       "use": "Instagram or LinkedIn feed post. Full photo with the headline written on it.",
       "headline_hint": "punchy, 5 to 9 words",
@@ -59,10 +62,11 @@
       "highlight_style": "The words \"{highlight}\" are in copper (#C77B4A). Every other headline word is pure white.",
       "sub_style": "Directly under the headline: a smaller, light-weight silver-white sans-serif line.",
       "photo_style": "Low-key lighting with one warm light source, deep blacks, dark engineered stone surfaces catching the light, premium and calm.",
-      "footer": "Bottom, centred brand lockup: the MAGPPIE logo exactly as in the attached logo image, in white; under it \"WELLNESS KITCHEN\" in small copper (#C77B4A) capitals with wide letter spacing; under that \"{bottom_line}\" in small silver capitals with wide letter spacing.",
+      "footer": "Bottom, centred brand lockup: first an empty band of plain dark background, about one tenth of the image height, centred at 80 percent of the height, left completely empty because the real logo is added there afterwards; under it \"WELLNESS KITCHEN\" in small copper (#C77B4A) capitals with wide letter spacing; under that \"{bottom_line}\" in small silver capitals with wide letter spacing.",
       "bottom_line": "SCIENCE. NATURE. PURPOSE. WELLNESS."
     }
   },
   "logo_media": "a9103ecb-7652-4294-a970-4df5b1b481b1",
+  "logo_stamped": true,
   "logo_note": "One attached image is the official MAGPPIE logo: heavy bold capital letters, white on black, with a small TM mark. Wherever the logo is asked for, reproduce it exactly as in that image, in white: the same letter shapes, weight and spacing. Do not redraw it in another typeface and do not add anything to it."
 }
