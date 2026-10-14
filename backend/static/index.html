@@ -107,6 +107,9 @@ select{background:var(--panel);color:var(--fg);border:1px solid var(--line);bord
 button.pill{background:none;cursor:pointer}
 button.pill:hover{border-color:var(--cyan)}
 a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--fg)}
+.kpick{display:grid;grid-template-columns:1fr 64px;gap:8px;align-items:start}
+.kpick img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+.kpick .main{grid-column:1/2}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding-top:8px}
 .thumbs img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
 .refs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
@@ -283,6 +286,19 @@ const MAKES = {blog: "the full blog", creative: hf => hf ? `the finished image${
 let kinds = {formats: {}, credits_each: null};      // story / poster / post, from the house styles
 let vtypes = {default: "", types: []};               // the kinds of video, from inputs/video-types.json
 const vchoice = {};                                  // idea id -> the video type chosen on its card
+const kchoice = {};                                  // idea id -> the kitchen (reference id) chosen on its card
+function kitchenLabel(k) {
+  return `${k.finish || "Finish not set"} · ${k.layout || "layout not set"} · ${k.source === "real" ? "real photo" : "render"}${k.reviewed ? "" : " · not reviewed"}`;
+}
+function kitchenPicker(i) {                           // the real MAGPPIE kitchen the video is set in
+  const list = i.kitchens || [];
+  if (!list.length) return '<p class="dim"><span class="k">Kitchen</span><br>No kitchens in the reference library yet. MAGI will describe one in words.</p>';
+  const cur = list.find(k => String(k.ref_id) === String(kchoice[i.id])) || list[0];
+  return `<label class="f"><span class="k">Kitchen · real MAGPPIE kitchens that suit this video</span>` +
+    `<select data-kitchen="${i.id}">${list.map(k => `<option value="${k.ref_id}"${k === cur ? " selected" : ""}>${esc(kitchenLabel(k))}</option>`).join("")}</select></label>` +
+    `<div class="kpick"><img class="main" src="${esc(cur.thumb || "")}" alt="${esc(cur.description || "kitchen")}">` +
+    `${cur.finish_thumb ? `<img src="${esc(cur.finish_thumb)}" alt="${esc(cur.finish)} finish" title="${esc(cur.finish)}">` : ""}</div>`;
+}
 const vlabel = k => ((vtypes.types.find(t => t.key === k) || {}).label || k || "");
 function typePicker(i, p) {                          // the video type of an idea, suggested by the Strategist
   const cur = vchoice[i.id] || p.video_type || vtypes.default, t = vtypes.types.find(x => x.key === cur) || {};
@@ -354,8 +370,9 @@ function ideaCard(i) {
   let brief = "";
   if (i.type === "creative" && open) brief = `<p class="k">Brief · change anything before you approve</p>` + wordsForm("idea-" + i.id, draftFor("idea-" + i.id, p), true);
   else if (i.type === "creative") brief = `<p class="dim"><span class="k">${esc((kinds.formats[p.format] || {}).label || "Creative")}</span><br>${esc(p.headline)}${p.supporting_line ? "<br>" + esc(p.supporting_line) : ""}</p>`;
-  if (i.type === "video" && open && vtypes.types.length) brief = `<div class="words">${typePicker(i, p)}</div>`;
-  else if (i.type === "video" && p.video_type) brief = `<p class="dim"><span class="k">Video type</span><br>${esc(vlabel(p.video_type))}</p>`;
+  if (i.type === "video" && open && vtypes.types.length) brief = `<div class="words">${typePicker(i, p)}${kitchenPicker(i)}</div>`;
+  else if (i.type === "video" && p.video_type) brief = `<p class="dim"><span class="k">Video type</span><br>${esc(vlabel(p.video_type))}` +
+    `${p.kitchen ? `<br><span class="k">Kitchen</span><br>${esc(kitchenLabel(p.kitchen))}` : ""}</p>`;
   const buttons = open
     ? `<div class="row"><button class="btn go" data-approve="${i.id}" data-type="${esc(i.type)}" title="MAGI makes ${esc(what)}">APPROVE</button>` +
       `<button class="btn no" data-reject="${i.id}">SKIP</button><span class="dim">Approve makes ${esc(what)}</span></div>` : state;
@@ -385,6 +402,17 @@ async function loadIdeas() {
 $("crawl").addEventListener("click", () => act(() => api("/api/ideas/generate", {}), "Finding new ideas. About a minute."));
 $("idea-cols").addEventListener("input", onWords);
 $("idea-cols").addEventListener("change", e => {
+  const kp = e.target.closest("[data-kitchen]");
+  if (kp) {                                           // show the chosen kitchen and its finish
+    kchoice[kp.dataset.kitchen] = kp.value;
+    const box = kp.closest(".words"), imgs = box.querySelectorAll(".kpick img");
+    fetch("/api/ideas/latest").then(r => r.json()).then(d => {
+      const i = d.ideas.find(x => String(x.id) === kp.dataset.kitchen), k = i && (i.kitchens || []).find(x => String(x.ref_id) === kp.value);
+      if (!k) return;
+      imgs[0].src = k.thumb || ""; if (imgs[1]) { imgs[1].src = k.finish_thumb || ""; imgs[1].title = k.finish || ""; }
+    });
+    return;
+  }
   const s = e.target.closest("[data-vtype]"); if (!s) return;
   vchoice[s.dataset.vtype] = s.value;
   const t = vtypes.types.find(x => x.key === s.value) || {};
@@ -394,7 +422,9 @@ $("idea-cols").addEventListener("click", e => {
   const a = e.target.closest("[data-approve]"), r = e.target.closest("[data-reject]"), g = e.target.closest("[data-goto]");
   if (a) { const id = a.dataset.approve, words = a.dataset.type === "creative" ? drafts["idea-" + id] : null;
     if (words && !words.headline.trim()) return toast("Write a headline first.");
-    const body = words ? {brief: words} : a.dataset.type === "video" && vchoice[id] ? {video: {video_type: vchoice[id]}} : {};
+    const card = a.closest(".card"), ks = card && card.querySelector("[data-kitchen]");
+    const video = a.dataset.type === "video" ? {...(vchoice[id] ? {video_type: vchoice[id]} : {}), ...(ks ? {kitchen_ref: +ks.value} : {})} : null;
+    const body = words ? {brief: words} : video && Object.keys(video).length ? {video} : {};
     act(() => api(`/api/ideas/${id}/approve`, body),
       a.dataset.type === "creative" && hfConnected ? "Approved. The image takes about two minutes. Watch it on the Content tab." : "Approved. MAGI is making it."); }
   if (r) act(() => api(`/api/ideas/${r.dataset.reject}/reject`, {}));

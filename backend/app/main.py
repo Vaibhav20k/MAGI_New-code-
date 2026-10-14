@@ -26,7 +26,7 @@ from .voice import router as voice_router
 from . import auth, bloom, brand, cognee_sync, higgsfield, keys, media, quick, script_engine
 from .higgsfield import router as higgsfield_router
 from .magi import router as magi_router
-from . import references, video_types
+from . import kitchens, references, video_types
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("mai")
@@ -356,6 +356,12 @@ async def idea_approve(idea_id: int, w: Words | None = None):
         await db.execute("update ideas set payload = coalesce(payload, '{}'::jsonb) || %s where id = %s "
                          "and type = 'video' and status in ('proposed','selected')",
                          db.Jsonb({"video_type": chosen["key"]}), idea_id)
+    if w and w.video and w.video.get("kitchen_ref"):
+        kitchen = await kitchens.describe(int(w.video["kitchen_ref"]))
+        if not kitchen:
+            raise HTTPException(400, "That kitchen is not in the reference library any more. Choose another.")
+        await db.execute("update ideas set payload = coalesce(payload, '{}'::jsonb) || %s where id = %s "
+                         "and type = 'video' and status in ('proposed','selected')", db.Jsonb({"kitchen": kitchen}), idea_id)
     started = await _start([idea_id])
     if not started:
         raise HTTPException(400, "This idea was already approved or set aside.")

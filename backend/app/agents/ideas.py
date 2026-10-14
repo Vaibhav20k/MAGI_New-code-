@@ -10,7 +10,7 @@ import json
 import logging
 import re
 
-from .. import bloom, brand, db, inputs, kb, llm, video_types
+from .. import bloom, brand, db, inputs, kb, kitchens, llm, video_types
 from ..embed import embed
 from . import creative
 
@@ -275,6 +275,9 @@ async def latest() -> dict:
         if i["type"] == "video":
             pay = i["payload"] = dict(i["payload"] or {})
             pay.setdefault("video_type", cards["default"])
+            if i["status"] in ("proposed", "selected"):  # the real kitchens that suit it, for the card's picker
+                i["kitchens"] = await kitchens.options(f"{i['title']}. {i['summary'] or ''} "
+                                                       f"{video_types.get(pay['video_type'])['label']}")
     return {"batch": batch, "ideas": ideas, "creative": kinds, "video": cards}
 
 
