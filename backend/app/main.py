@@ -26,6 +26,7 @@ from .voice import router as voice_router
 from . import auth, bloom, brand, cognee_sync, higgsfield, keys, media, quick, script_engine
 from .higgsfield import router as higgsfield_router
 from .magi import router as magi_router
+from . import references
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("mai")
@@ -89,6 +90,7 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(review_reminder, "cron", hour=18, minute=0, id="review_reminder")
     scheduler.add_job(knowledge.housekeeping, "cron", hour=8, minute=5, id="housekeeping")
     scheduler.add_job(cognee_sync.sync, "cron", hour=8, minute=10, id="cognee_sync")
+    scheduler.add_job(references.sync, "cron", hour=7, minute=30, id="reference_sync")   # new Drive pictures, after the crawl
     scheduler.start()
     async with mai_tools.session_manager.run():      # MAI's tools (MCP) live as long as the app
         yield
@@ -103,6 +105,7 @@ app.include_router(auth.router)
 app.include_router(voice_router)
 app.include_router(higgsfield_router)
 app.include_router(magi_router)
+app.include_router(references.router)
 
 
 # ---------------- Status ----------------

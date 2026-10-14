@@ -1,0 +1,16 @@
+{
+  "_about": "Where MAGI's reference pictures come from, and how each Drive folder is read. MAGI copies the files into its own storage, describes each picture, and makes them searchable for lookbooks and videos. The Drive folder must be shared as 'anyone with the link'. Rules are tried in order; the first whose 'match' appears in a file's folder path decides its kind. 'source' is real (a photograph of real work), render, or left out to let MAGI judge from the picture.",
+  "drive_folder_id": "1jWOfLoYWxiWz6tEJL-DD3xxjiQ_HibZT",
+  "skip_folders": ["more/magppie logos"],
+  "skip_extensions": [".webm"],
+  "rules": [
+    {"match": "finishes", "kind": "finish", "source": "real", "finish_from_name": true},
+    {"match": "logo", "kind": "logo"},
+    {"match": "kitchen/real pictures", "kind": "kitchen", "source": "real"},
+    {"match": "kitchen/renders", "kind": "kitchen", "source": "render"},
+    {"match": "kitchens", "kind": "kitchen"},
+    {"match": "vanities", "kind": "vanity"},
+    {"match": "wardrobes", "kind": "wardrobe"},
+    {"match": "videos", "kind": "video"}
+  ]
+}
