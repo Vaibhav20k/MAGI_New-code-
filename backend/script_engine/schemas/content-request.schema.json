@@ -50,6 +50,10 @@
       "type": "string",
       "description": "The kind of video (Rule 7), e.g. before_after, story, demonstration."
     },
+    "set_brief": {
+      "type": "string",
+      "description": "The real MAGPPIE kitchen every scene is set in: layout, finish, what its reference photo shows (Rule 8)."
+    },
     "video_type_brief": {
       "type": "string",
       "description": "The video type's template: beats, hook, camera, on-screen text, voice, cautions (Rule 7)."

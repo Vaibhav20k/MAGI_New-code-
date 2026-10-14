@@ -34,7 +34,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from . import brand, inputs, llm, video_types
+from . import brand, inputs, kitchens, llm, video_types
 from .config import get_settings
 
 ENGINE = Path(__file__).resolve().parents[1] / "script_engine"
@@ -406,6 +406,7 @@ async def write(video_id: int, idea: dict, team_knowledge: str, on_stage) -> dic
         "platform": "instagram_reels", "featured_product_category": PRODUCT,
         "video_type": kind["key"],
         "video_type_brief": brand.clean(video_types.brief(kind))[:2500],
+        **({"set_brief": brand.clean(kitchens.as_brief(draft["kitchen"]))[:1500]} if draft.get("kitchen") else {}),
         "custom_instructions": brand.clean(
             f"Why this idea fits MAGPPIE: {idea.get('angle') or ''}\nSuggested hook: {draft.get('hook', '')}\n"
             f"Suggested beats: {draft.get('beats', '')}\nVertical 9:16 reel. End on the company's call to action.\n"

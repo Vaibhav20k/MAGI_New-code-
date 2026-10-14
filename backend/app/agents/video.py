@@ -23,7 +23,7 @@ house style of the team's earlier prompts, written by the other brains.
 import json
 import logging
 
-from .. import brand, db, inputs, kb, llm, media, script_engine, video_types
+from .. import brand, db, inputs, kb, kitchens, llm, media, script_engine, video_types
 from ..config import get_settings
 
 log = logging.getLogger("mai.video")
@@ -92,6 +92,12 @@ def _seedance(seconds: int) -> dict:
 async def write_script(idea_id: int) -> int:
     """Create the video row and write the script for this idea."""
     idea = await db.fetchrow("select * from ideas where id = %s", idea_id)
+    if not (idea["payload"] or {}).get("kitchen"):     # approved without a choice (e.g. by MAGI): the best kitchen
+        best = await kitchens.options(f"{idea['title']}. {idea['summary'] or ''}", n=1)
+        if best:
+            idea["payload"] = {**(idea["payload"] or {}), "kitchen": best[0]}
+            await db.execute("update ideas set payload = coalesce(payload, '{}'::jsonb) || %s where id = %s",
+                             db.Jsonb({"kitchen": best[0]}), idea_id)
     row = await db.fetchrow("insert into videos (idea_id, script, status, started_at) values (%s,%s,'writing',now()) "
                             "returning id", idea_id, db.Jsonb({"stage": "Starting the script engine"}))
     video_id = row["id"]
@@ -127,7 +133,8 @@ async def _backup_script(idea: dict) -> dict:
     words = int(seconds * WORDS_PER_SECOND)
     idea_text = (f"IDEA:\nTitle: {idea['title']}\nSummary: {idea['summary']}\nWhy it fits us: {idea['angle']}\n"
                  f"Suggested hook: {draft.get('hook', '')}\nSuggested beats: {draft.get('beats', '')}\n\n"
-                 f"{video_types.brief(video_types.get(draft.get('video_type')))}")
+                 f"{video_types.brief(video_types.get(draft.get('video_type')))}"
+                 + (f"\n\n{kitchens.as_brief(draft['kitchen'])}" if draft.get("kitchen") else ""))
 
     research = brand.scrub(await llm.chat_json(RESEARCH, f"{idea_text}\n\n{knowledge}", temperature=0.4))
     facts = "\n".join(f"- {f.get('fact')}" for f in research.get("facts") or [] if f.get("fact"))
@@ -272,6 +279,10 @@ async def decide_lookbook(video_id: int, decision: str, feedback: str = "") -> b
             await db.execute("update videos set script = script - 'stage', status = 'lookbook_ready', error = null "
                              "where id = %s", video_id)
             return True
+        kitchen = await db.fetchrow("select i.payload->'kitchen' k from videos v join ideas i on i.id = v.idea_id "
+                                    "where v.id = %s", video_id)
+        if kitchen and isinstance(kitchen["k"], dict):
+            await kitchens.record(video_id, kitchen["k"])     # the next video chooses a different kitchen
         package = await script_engine.video_prompts(run_id, stage)
         seconds = int(v["script"]["final_script"].get("target_duration_seconds") or 30)
         plan = {"prompt": package.pop("higgsfield_prompt"), "model": "seedance_2_5",

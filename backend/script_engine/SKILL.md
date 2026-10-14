@@ -302,6 +302,21 @@ as the same five beats, so the videos looked alike and the strongest format for 
 
 ---
 
+## RULE 8 — The kitchen is a real MAGPPIE kitchen
+
+**What to do:** When the content request carries a `set_brief`, it names the real MAGPPIE kitchen the film is set in:
+its layout, its finish and what its reference photograph shows. Agent 2 writes that kitchen into the Continuity
+Bible's set and keeps it identical in every scene. Agent 4 fills the lookbook's set card and product card from it.
+Agent 5 repeats it in every scene prompt as part of the Continuity Bible.
+
+**What not to do:** Do not invent another layout, finish or material, or let the kitchen change between scenes. Never
+say the finish name, or any colour of the stone, in the voice-over: the name is for the pictures only.
+
+**Why:** The videos showed kitchens MAGPPIE does not make. Each video is now set in a real kitchen from the reference
+library, and consecutive videos use different ones.
+
+---
+
 ## Phase 3 — Video Generation Prompt Format (only after approval)
 
 For each scene, output:
@@ -344,6 +359,7 @@ Then output the **Edit Sheet** (Rule 4.5).
 - [ ] The narrator is in the Continuity Bible; every scene has voice direction; every spoken beat has its delivery (Rule 6)
 - [ ] Length = number of scenes × 30 sec
 - [ ] The video type's hook style and beat purposes are followed (Rule 7)
+- [ ] Every scene is set in the kitchen of the set brief, unchanged (Rule 8)
 
 **Phase 2 — Lookbook**
 - [ ] Palette, mood, Continuity Bible included
@@ -376,3 +392,4 @@ This rulebook grows over time. To add a rule:
 | 1.0 | 2026-10-01 | Rules 1–5 created | Scripts lacked directions; output looked AI-generated; transitions jumped between unrelated screens; clips limited to 30 sec; credits wasted on unapproved video |
 | 1.1 | 2026-10-03 | Rule 6 added: the voice must sound human | Voice-over sounded read out and machine-made: one pitch, one speed, no breath |
 | 1.2 | 2026-10-15 | Rule 7 added: every video follows its video type | All videos were written in one shape; the type that suits the topic was never used |
+| 1.3 | 2026-10-15 | Rule 8 added: the kitchen is a real MAGPPIE kitchen | Videos showed kitchens MAGPPIE does not make, and every video looked alike |

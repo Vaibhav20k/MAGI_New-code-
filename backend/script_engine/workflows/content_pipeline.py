@@ -1720,6 +1720,7 @@ Exactly three keyframes for every scene of the locked script (entry, key moment,
             "aspect_ratio": production.aspect_ratio_for(request.get("platform", "")),
             "video_type": request.get("video_type"),
             "video_type_brief": request.get("video_type_brief"),
+            "set_brief": request.get("set_brief"),
             "continuity_bible": script.get("continuity_bible"),
             "locked_script": self._script_for_production(script),
             "approved_lookbook": {k: lookbook.get(k) for k in
