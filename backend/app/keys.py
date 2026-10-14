@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException
 from openai import APIStatusError, AsyncOpenAI
 from pydantic import BaseModel
 
-from . import llm, quick
+from . import llm, quick, vision
 from .config import get_settings
 
 log = logging.getLogger("mai.keys")
@@ -39,6 +39,7 @@ def _use(value: str) -> None:
     for name in [n for n in llm._cooldown if "gemini" in n]:
         del llm._cooldown[name]
     quick._clients = None
+    vision.reset()
 
 
 def load() -> None:

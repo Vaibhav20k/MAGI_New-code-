@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # (shared with Cognee) is the fallback. MAI chat uses other lite models (see services/hermes/config.yaml).
     gemini_models: str = "gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3-flash-preview,gemini-3.1-flash-lite"
     gemini_fast_models: str = ""
+    # Looking at reference pictures (app/vision.py): models nothing else uses, so the chat and crawler keep theirs
+    gemini_vision_models: str = "gemini-3.5-flash-lite,gemini-2.5-flash-lite"
+    vision_daily_cap: int = 300
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"
     cerebras_api_key: str = ""
