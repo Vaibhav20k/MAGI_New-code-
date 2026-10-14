@@ -45,6 +45,14 @@
     },
     "custom_instructions": {
       "type": "string"
+    },
+    "video_type": {
+      "type": "string",
+      "description": "The kind of video (Rule 7), e.g. before_after, story, demonstration."
+    },
+    "video_type_brief": {
+      "type": "string",
+      "description": "The video type's template: beats, hook, camera, on-screen text, voice, cautions (Rule 7)."
     }
   },
   "additionalProperties": false

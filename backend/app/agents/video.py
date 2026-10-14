@@ -23,7 +23,7 @@ house style of the team's earlier prompts, written by the other brains.
 import json
 import logging
 
-from .. import brand, db, inputs, kb, llm, media, script_engine
+from .. import brand, db, inputs, kb, llm, media, script_engine, video_types
 from ..config import get_settings
 
 log = logging.getLogger("mai.video")
@@ -126,7 +126,8 @@ async def _backup_script(idea: dict) -> dict:
         seconds = 30
     words = int(seconds * WORDS_PER_SECOND)
     idea_text = (f"IDEA:\nTitle: {idea['title']}\nSummary: {idea['summary']}\nWhy it fits us: {idea['angle']}\n"
-                 f"Suggested hook: {draft.get('hook', '')}\nSuggested beats: {draft.get('beats', '')}")
+                 f"Suggested hook: {draft.get('hook', '')}\nSuggested beats: {draft.get('beats', '')}\n\n"
+                 f"{video_types.brief(video_types.get(draft.get('video_type')))}")
 
     research = brand.scrub(await llm.chat_json(RESEARCH, f"{idea_text}\n\n{knowledge}", temperature=0.4))
     facts = "\n".join(f"- {f.get('fact')}" for f in research.get("facts") or [] if f.get("fact"))

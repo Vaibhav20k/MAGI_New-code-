@@ -283,6 +283,25 @@ Read the scene aloud. *"Would a listener believe a person is talking to them?"* 
 
 ---
 
+## RULE 7 — Every video follows its video type
+
+**What to do:** When the content request carries a `video_type` and a `video_type_brief`, every agent follows that
+template. Agent 1 gathers evidence that the type can show (a demonstration needs a claim that can be seen; a before
+and after needs a believable "before"). Agent 2 writes the hook in the style the type asks for, using one of its
+preferred opening forms where the evidence allows, and gives each beat the purpose the type's beat list names, at
+the same timings. Agent 3 keeps the type's structure while editing. Agent 4 shoots the lookbook in the type's camera
+style. Agent 5 keeps the type's on-screen text and voice style in the scene prompts and the Edit Sheet.
+
+**What not to do:** Do not change the type, mix two types, or stretch a scene beyond 30 seconds to fit it. The
+type's beats never override Rules 1 to 6: timings stay 0:00–0:05, 0:05–0:12, 0:12–0:20, 0:20–0:27, 0:27–0:30, and
+the hook diversity gate still decides when an opening is too close to a recent one. A type's cautions are added to
+the brand rules, never instead of them.
+
+**Why:** Different stories need different shapes. A demonstration, a reveal and a mini-drama were all being written
+as the same five beats, so the videos looked alike and the strongest format for the topic was never used.
+
+---
+
 ## Phase 3 — Video Generation Prompt Format (only after approval)
 
 For each scene, output:
@@ -324,6 +343,7 @@ Then output the **Edit Sheet** (Rule 4.5).
 - [ ] Entry and exit frames are written for every scene
 - [ ] The narrator is in the Continuity Bible; every scene has voice direction; every spoken beat has its delivery (Rule 6)
 - [ ] Length = number of scenes × 30 sec
+- [ ] The video type's hook style and beat purposes are followed (Rule 7)
 
 **Phase 2 — Lookbook**
 - [ ] Palette, mood, Continuity Bible included
@@ -355,3 +375,4 @@ This rulebook grows over time. To add a rule:
 |---|---|---|---|
 | 1.0 | 2026-10-01 | Rules 1–5 created | Scripts lacked directions; output looked AI-generated; transitions jumped between unrelated screens; clips limited to 30 sec; credits wasted on unapproved video |
 | 1.1 | 2026-10-03 | Rule 6 added: the voice must sound human | Voice-over sounded read out and machine-made: one pitch, one speed, no breath |
+| 1.2 | 2026-10-15 | Rule 7 added: every video follows its video type | All videos were written in one shape; the type that suits the topic was never used |

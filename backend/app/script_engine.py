@@ -34,7 +34,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from . import brand, inputs, llm
+from . import brand, inputs, llm, video_types
 from .config import get_settings
 
 ENGINE = Path(__file__).resolve().parents[1] / "script_engine"
@@ -394,6 +394,7 @@ async def write(video_id: int, idea: dict, team_knowledge: str, on_stage) -> dic
     if not available():
         raise RuntimeError("No OpenRouter key is saved for the script engine.")
     draft = idea.get("payload") or {}
+    kind = video_types.get(draft.get("video_type"))
     run_id = f"run_{datetime.now():%Y%m%d_%H%M%S}_v{video_id}"
     cfg = _config(run_id)
     await asyncio.to_thread(_write_knowledge, cfg.knowledge_dir, team_knowledge)
@@ -401,8 +402,10 @@ async def write(video_id: int, idea: dict, team_knowledge: str, on_stage) -> dic
         "request_id": f"REQ-VIDEO-{video_id}",
         "topic": str(idea["title"]).strip().ljust(5, "."),
         "primary_objective": (str(idea.get("summary") or "").strip() or f"Show why {idea['title']} matters for a family home")[:600],
-        "format": "short-form", "target_duration_seconds": SECONDS, "target_audience": AUDIENCE,
+        "format": "short-form", "target_duration_seconds": int(kind.get("length_seconds") or SECONDS), "target_audience": AUDIENCE,
         "platform": "instagram_reels", "featured_product_category": PRODUCT,
+        "video_type": kind["key"],
+        "video_type_brief": brand.clean(video_types.brief(kind))[:2500],
         "custom_instructions": brand.clean(
             f"Why this idea fits MAGPPIE: {idea.get('angle') or ''}\nSuggested hook: {draft.get('hook', '')}\n"
             f"Suggested beats: {draft.get('beats', '')}\nVertical 9:16 reel. End on the company's call to action.\n"

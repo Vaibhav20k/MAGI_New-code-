@@ -497,6 +497,13 @@ class ContentPipeline:
 
             draft_data, a2_latency, a2_tokens = self._execute_agent_2(request_data_rev, dossier_data, run_id, mock_mode)
             self.validator.assert_valid(draft_data, "script.schema.json")
+            # The revision passes the same production gate as the first draft (scene arithmetic, beats, frames).
+            draft_data, continuity_verdict, c_latency, c_tokens = self._enforce_continuity(
+                request_data_rev, dossier_data, draft_data, run_id, run_dir, mock_mode
+            )
+            state["continuity"] = continuity_verdict
+            a2_latency += c_latency
+            a2_tokens += c_tokens
             self._render_script_markdown(draft_data, run_dir / "master-draft-revised.md", f"REVISED MASTER DRAFT v{script_version}")
 
             # Rerun Agent 3
@@ -1711,6 +1718,8 @@ Exactly three keyframes for every scene of the locked script (entry, key moment,
             "run_id": run_id,
             "platform": request.get("platform"),
             "aspect_ratio": production.aspect_ratio_for(request.get("platform", "")),
+            "video_type": request.get("video_type"),
+            "video_type_brief": request.get("video_type_brief"),
             "continuity_bible": script.get("continuity_bible"),
             "locked_script": self._script_for_production(script),
             "approved_lookbook": {k: lookbook.get(k) for k in
