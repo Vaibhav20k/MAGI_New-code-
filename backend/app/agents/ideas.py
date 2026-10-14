@@ -10,7 +10,7 @@ import json
 import logging
 import re
 
-from .. import bloom, brand, db, inputs, kb, llm
+from .. import bloom, brand, db, inputs, kb, llm, video_types
 from ..embed import embed
 from . import creative
 
@@ -53,8 +53,13 @@ CREATIVE KINDS:
 %s
 Headlines the company has used before (style reference, do not repeat):
 %s
-  video    → {"platform": "...", "length_seconds": 30, "hook": "first 3 seconds", "beats": ["...", ...],
-              "cta": "..."}
+  video    → {"video_type": "one key from VIDEO TYPES below", "type_reason": "one sentence: why this type suits
+              this topic and will travel furthest on Instagram", "platform": "...", "length_seconds": 30,
+              "hook": "first 3 seconds", "beats": ["...", ...], "cta": "..."}
+              Choose the type for the topic: the one most likely to stop the scroll and be watched, saved or shared.
+              Use a different type for each video idea where you can.
+VIDEO TYPES:
+%s
 Write %d ideas of each type."""
 
 PICK_SYSTEM = """You are the Strategist of a marketing team. Score each candidate idea from 1 to 10 on:
@@ -129,7 +134,7 @@ async def generate_batch(batch_id: int) -> dict:
         if direction:
             user += ("\n\nCREATIVE DIRECTION AND TEMPLATES (from our brand's Bloom skill; use it to shape the creative and "
                      f"video ideas, never to add facts):\n{direction}")
-        data = await llm.chat_json(ADAPT_SYSTEM % (kinds, used, 5), user, temperature=0.9)
+        data = await llm.chat_json(ADAPT_SYSTEM % (kinds, used, video_types.menu(), 5), user, temperature=0.9)
         cands = []
         for c in brand.scrub(data.get("ideas", [])):
             if c.get("type") not in TYPES or not c.get("title"):
@@ -188,6 +193,16 @@ async def generate_batch(batch_id: int) -> dict:
             taken.add(draft["format"])
             draft["bottom_line"] = st["formats"][draft["format"]]["bottom_line"]
 
+        # the picked videos each get a type MAGI can make, different from each other where possible
+        used: set[str] = set()
+        for n in sorted(picks):
+            c = fresh[n - 1]
+            if c["type"] != "video":
+                continue
+            draft = c["draft"] = c.get("draft") if isinstance(c.get("draft"), dict) else {}
+            draft["video_type"] = video_types.choose(draft.get("video_type"), used)
+            used.add(draft["video_type"])
+
         kb_by_id = {r["id"]: r for r in kb_rows}
         for n, c in enumerate(fresh, start=1):
             sc = scores.get(n, {})
@@ -230,7 +245,7 @@ async def new_batch() -> int:
 async def latest() -> dict:
     batch = await db.fetchrow("select * from idea_batches order by id desc limit 1")
     if not batch:
-        return {"batch": None, "ideas": []}
+        return {"batch": None, "ideas": [], "creative": creative.formats(), "video": video_types.for_cards()}
     ideas = await db.fetch(
         "select id, type, title, summary, angle, inspired_by, kb_refs, payload, score, status, created_at "
         "from ideas where batch_id = %s and status <> 'candidate' order by type, score desc nulls last",
@@ -255,7 +270,12 @@ async def latest() -> dict:
                 pay["format"] = order[n % len(order)]
             pay.setdefault("bottom_line", kinds["formats"][pay["format"]]["bottom_line"])
             n += 1
-    return {"batch": batch, "ideas": ideas, "creative": kinds}
+    cards = video_types.for_cards()
+    for i in ideas:                                   # ideas made before types existed get the default
+        if i["type"] == "video":
+            pay = i["payload"] = dict(i["payload"] or {})
+            pay.setdefault("video_type", cards["default"])
+    return {"batch": batch, "ideas": ideas, "creative": kinds, "video": cards}
 
 
 def dumps(o) -> str:
