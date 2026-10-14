@@ -109,6 +109,18 @@ button.pill:hover{border-color:var(--cyan)}
 a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--fg)}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding-top:8px}
 .thumbs img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+.refs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.ref{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.ref.done{border-color:color-mix(in srgb,var(--mint) 45%,transparent)}
+.ref a.pic{display:block;position:relative;aspect-ratio:4/3;background:#000}
+.ref a.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.ref a.pic b{position:absolute;right:8px;bottom:8px;font:700 10px var(--mono);letter-spacing:.1em;background:rgba(0,0,0,.65);padding:2px 7px;border-radius:999px}
+.ref .body{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ref .name{font-size:12.5px;overflow-wrap:anywhere}
+.ref .desc{font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ref select{padding:6px 8px;font-size:12.5px;width:100%}
+.ref .two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ref .btn{height:32px;padding:0 10px;font-size:10.5px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.card,.realm h1{animation:none}.card:hover{transform:none}.spin{animation:none}.bar>i{transition:none}.prog.unknown .bar>i{animation:none}}
 </style>
@@ -132,6 +144,7 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--fg
   <button role="tab" data-t="content" aria-selected="false">CONTENT<span class="n" id="n-content"></span></button>
   <button role="tab" data-t="approvals" aria-selected="false">APPROVALS<span class="n" id="n-held"></span></button>
   <button role="tab" data-t="crawler" aria-selected="false">CRAWLER</button>
+  <button role="tab" data-t="refs" aria-selected="false">REFERENCES<span class="n" id="n-refs"></span></button>
 </nav>
 
 <main id="ideas">
@@ -180,6 +193,21 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--fg
   <h2>Sites</h2><div class="tw"><table id="sources"></table></div>
 </main>
 
+<main id="refs" hidden>
+  <div class="row">
+    <h2>References</h2>
+    <span id="ref-state" class="pill"></span>
+    <button class="btn go" id="ref-sync" style="margin-left:auto">SYNC FROM DRIVE</button>
+  </div>
+  <p class="lead">MAGPPIE's own pictures and clips from the shared Drive folder. MAGI describes each one and uses them to pick real kitchens and finishes for lookbooks and videos. On each kitchen, check the finish (a guess until you set it) and press Reviewed. "Use exactly" pictures can appear as they are; "Style only" ones only guide the look.</p>
+  <div class="row">
+    <select id="ref-kind" aria-label="Kind"><option value="">All kinds</option></select>
+    <select id="ref-rev" aria-label="Reviewed"><option value="">Reviewed or not</option><option value="no">Not reviewed yet</option><option value="yes">Reviewed</option></select>
+    <input type="text" class="grow" id="ref-q" placeholder="Search by meaning, e.g. island kitchen in warm morning light" aria-label="Search references">
+  </div>
+  <div class="refs" id="ref-grid"></div>
+</main>
+
 <div id="toast" role="status" hidden></div>
 
 <script>
@@ -215,7 +243,7 @@ function md(src) {                       // small, safe Markdown renderer for bl
 }
 
 // ---------------- Tabs ----------------
-const tabs = ["ideas", "content", "approvals", "crawler"];
+const tabs = ["ideas", "content", "approvals", "crawler", "refs"];
 function show(t) {
   tabs.forEach(x => { $(x).hidden = x !== t; });
   document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === t));
@@ -616,6 +644,51 @@ $("link-add").addEventListener("click", () => {
   act(() => api("/api/inspiration", {url: v}), "Added. It will be read first on the next crawl."); $("link").value = "";
 });
 
+// ---------------- References (MAGPPIE's own pictures, from the Drive) ----------------
+const REF_KINDS = {kitchen: "Kitchens", finish: "Finishes", vanity: "Vanities", wardrobe: "Wardrobes", video: "Clips", logo: "Logo", frame: "Made by MAGI", other: "Other"};
+const LAYOUTS = ["L-shape", "U-shape", "island", "parallel", "straight", "peninsula", "other"];
+let refFinishes = [], refQuery = "", refTimer;
+$("ref-kind").innerHTML += Object.entries(REF_KINDS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+function refCard(r) {
+  const opt = (list, cur, none) => `<option value="">${none}</option>` + list.map(x => `<option${x === cur ? " selected" : ""}>${esc(x)}</option>`).join("");
+  const finish = r.kind === "finish" ? `<span class="pill amber">${esc(r.finish)}</span>` :
+    `<select data-ref="${r.id}" data-f="finish" aria-label="Finish">${opt(refFinishes, r.finish, r.finish ? "No finish" : "Finish: not set")}</select>` +
+    (r.finish_from === "guess" ? '<span class="dim">Finish is a guess by MAGI. Check it.</span>' : "");
+  const layout = ["kitchen", "video", "frame"].includes(r.kind) ? `<select data-ref="${r.id}" data-f="layout" aria-label="Layout">${opt(LAYOUTS, r.layout, "Layout: not set")}</select>` : "";
+  const people = r.flags && r.flags.people ? '<span class="pill">PEOPLE</span>' : "";
+  return `<div class="ref${r.reviewed ? " done" : ""}">` +
+    `<a class="pic" href="${esc(r.file_path)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(r.thumb_path || "")}" alt="${esc(r.description || r.name)}">${r.media_type === "video" ? "<b>CLIP</b>" : ""}</a>` +
+    `<div class="body"><div class="row" style="gap:6px"><span class="pill">${esc((REF_KINDS[r.kind] || r.kind).toUpperCase())}</span>` +
+    `<span class="pill${r.source === "real" ? " mint" : ""}">${esc((r.source || "?").toUpperCase())}</span>${people}</div>` +
+    `<div class="name">${esc(r.name)}</div>${finish}${layout}<div class="desc">${esc(r.description || "Not described yet.")}</div>` +
+    `<div class="two"><select data-ref="${r.id}" data-f="usable_as" aria-label="How it may be used"><option value="exact"${r.usable_as === "exact" ? " selected" : ""}>Use exactly</option><option value="style"${r.usable_as === "style" ? " selected" : ""}>Style only</option></select>` +
+    `<button class="btn${r.reviewed ? "" : " go"}" data-ref-review="${r.id}" data-v="${r.reviewed ? "" : "1"}">${r.reviewed ? "REVIEWED ✓" : "MARK REVIEWED"}</button></div></div></div>`;
+}
+async function loadRefs() {
+  const grid = $("ref-grid");
+  if (editing(grid)) return;
+  const qs = new URLSearchParams({kind: $("ref-kind").value, reviewed: $("ref-rev").value, q: refQuery});
+  const [st, rows, fins] = await Promise.all([api("/api/references/status"), api("/api/references?" + qs), refFinishes.length ? refFinishes : api("/api/references/finishes")]);
+  refFinishes = fins;
+  const s = st.sync, total = st.kinds.reduce((n, k) => n + k.n, 0), done = st.kinds.reduce((n, k) => n + k.reviewed, 0);
+  $("ref-state").textContent = s.running ? `${s.step.toUpperCase()} · ${s.done}/${s.total}` : s.error ? "LAST SYNC: " + s.error : `${total} PICTURES · ${done} REVIEWED`;
+  $("ref-sync").disabled = s.running;
+  $("n-refs").textContent = total ? ` ${total - done}` : "";
+  setHTML(grid, rows.map(refCard).join("") || '<div class="empty">Nothing here yet. Press Sync from Drive.</div>');
+}
+$("ref-sync").addEventListener("click", () => act(() => api("/api/references/sync", {}), "Reading the Drive. New pictures appear as they are described."));
+$("ref-kind").addEventListener("change", () => loadRefs().catch(e => toast(e.message)));
+$("ref-rev").addEventListener("change", () => loadRefs().catch(e => toast(e.message)));
+$("ref-q").addEventListener("input", e => { clearTimeout(refTimer); refTimer = setTimeout(() => { refQuery = e.target.value.trim(); loadRefs().catch(err => toast(err.message)); }, 400); });
+$("ref-grid").addEventListener("change", e => {
+  const el = e.target.closest("[data-ref]"); if (!el) return;
+  act(() => api(`/api/references/${el.dataset.ref}`, {[el.dataset.f]: el.value}), "Saved.");
+});
+$("ref-grid").addEventListener("click", e => {
+  const b = e.target.closest("[data-ref-review]"); if (!b) return;
+  act(() => api(`/api/references/${b.dataset.refReview}`, {reviewed: !!b.dataset.v}), b.dataset.v ? "Marked reviewed." : "Marked not reviewed.");
+});
+
 // ---------------- Alerts (Chrome notifications) ----------------
 let seenNote = 0;
 try { seenNote = +localStorage.getItem("mai-note") || 0; } catch (_) {}
@@ -646,6 +719,7 @@ async function refreshAll() {
   if (!$("content").hidden) jobs.push(loadContent());
   if (!$("approvals").hidden) jobs.push(loadHeld());
   if (!$("crawler").hidden) jobs.push(loadCrawler());
+  if (!$("refs").hidden) jobs.push(loadRefs());
   jobs.push(loadNotes());
   const res = await Promise.allSettled(jobs);
   if (res[0].status === "rejected") $("stats").textContent = "server not reachable · the connection to the server has dropped";
